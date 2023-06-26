@@ -1,18 +1,18 @@
 ﻿
 public class Skill
 {
-    public EnumSkillList SkillName
+    public EnumSkills SkillName
     { get; set; }
     public Kingdom.EnumAbilityScore KeyAbility
     {
         get; set;
     }
 
-    public static Dictionary<Skill.EnumSkillList, Skill> SkillList()
+    public static Dictionary<Skill.EnumSkills, Skill> SkillList()
     {
-        Dictionary<Skill.EnumSkillList, Skill> returnedMap = new Dictionary<Skill.EnumSkillList, Skill>();
+        Dictionary<Skill.EnumSkills, Skill> returnedMap = new Dictionary<Skill.EnumSkills, Skill>();
        
-        foreach (Skill.EnumSkillList forSkillEnum in (Skill.EnumSkillList[])Skill.EnumSkillList.GetValues(typeof(Skill.EnumSkillList)))
+        foreach (Skill.EnumSkills forSkillEnum in (Skill.EnumSkills[])Skill.EnumSkills.GetValues(typeof(Skill.EnumSkills)))
         {
             returnedMap[forSkillEnum] = new Skill(forSkillEnum);
         }
@@ -20,34 +20,34 @@ public class Skill
         return returnedMap;
     }
 
-    public Skill(EnumSkillList enumSkill)
+    public Skill(EnumSkills enumSkill)
     {
         this.SkillName = enumSkill;                
 
         switch(enumSkill)
         {
-            case EnumSkillList.Arts:
-            case EnumSkillList.Folklore:
-            case EnumSkillList.Magic:
-            case EnumSkillList.Scholarship:
+            case EnumSkills.Arts:
+            case EnumSkills.Folklore:
+            case EnumSkills.Magic:
+            case EnumSkills.Scholarship:
                 this.KeyAbility = Kingdom.EnumAbilityScore.Culture;
                 break;
-            case EnumSkillList.Boating:
-            case EnumSkillList.Exploration:
-            case EnumSkillList.Industry:
-            case EnumSkillList.Trade:
+            case EnumSkills.Boating:
+            case EnumSkills.Exploration:
+            case EnumSkills.Industry:
+            case EnumSkills.Trade:
                 this.KeyAbility = Kingdom.EnumAbilityScore.Economy;
                 break;
-            case EnumSkillList.Intrigue:
-            case EnumSkillList.Politics:
-            case EnumSkillList.Statecraft:
-            case EnumSkillList.Warfare:
+            case EnumSkills.Intrigue:
+            case EnumSkills.Politics:
+            case EnumSkills.Statecraft:
+            case EnumSkills.Warfare:
                 this.KeyAbility = Kingdom.EnumAbilityScore.Loyalty;
                 break;
-            case EnumSkillList.Agriculture:
-            case EnumSkillList.Defense:
-            case EnumSkillList.Engineering:
-            case EnumSkillList.Wilderness:
+            case EnumSkills.Agriculture:
+            case EnumSkills.Defense:
+            case EnumSkills.Engineering:
+            case EnumSkills.Wilderness:
                 this.KeyAbility = Kingdom.EnumAbilityScore.Stability;
                 break;
             default: 
@@ -55,8 +55,9 @@ public class Skill
         }
     }
 
-    public enum EnumSkillList
+    public enum EnumSkills
     {
+        None,
         Agriculture,
         Arts,
         Boating,

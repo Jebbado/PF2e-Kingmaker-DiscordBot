@@ -10,22 +10,15 @@ public class Kingdom
     private EnumGovernment Government;
 
     private int ExperiencePoints;
+    private int KingdomLevel;
     private int PlayersLevel;
     private int RessourcePoints;
     //private int KingdomSize;
 
-    private int CultureAbilityScore;
-    private int CorruptionScore; //Culture Ruin
-    private int CorruptionModifier;
+    private int CultureAbilityScore;    
     private int EconomyAbilityScore;
-    private int CrimeScore; //Economy Ruin
-    private int CrimeModifier;
     private int LoyaltyAbilityScore;
-    private int StrifeScore; //Loyalty Ruin
-    private int StrifeModifier;
     private int StabilityAbilityScore;
-    private int DecayScore; //Stability Ruin
-    private int DecayModifier;
 
     private int FamePoints;
     private int UnrestPoints;
@@ -42,9 +35,13 @@ public class Kingdom
 
     private List<Hex> Territory;
 
-    private List<EnumRuinCategory> RuinResistances;
+    //private List<EnumRuinCategory> RuinResistances;
+    private Dictionary<EnumRuinCategory, int> RuinScore;
+    private Dictionary<EnumRuinCategory, int> RuinThreshold;
+    private Dictionary<EnumRuinCategory, int> RuinItemPenalty;    
 
-    private Dictionary<Skill.EnumSkillList, Skill.EnumSkillTraining> SkillTrainings;
+    private Dictionary<Skill.EnumSkills, Skill.EnumSkillTraining> SkillTrainings;
+    private Dictionary<Feat.EnumFeats, string> Feats;
 
     public enum EnumAbilityScore
     {
@@ -97,6 +94,8 @@ public class Kingdom
         Decay
     }
 
+   
+
     public Kingdom(string name, string capitolName)
     {
         KingdomName = name;
@@ -111,27 +110,20 @@ public class Kingdom
         LoyaltyAbilityScore = 10;
         StabilityAbilityScore = 10;
 
-        CorruptionScore = 0;
-        CorruptionModifier = 0;
-
-        CrimeScore = 0;
-        CrimeModifier = 0;
-        
-        StrifeScore = 0;
-        StrifeModifier = 0;
-        
-        DecayScore = 0;
-        DecayModifier = 0;
+        KingdomLevel = 1;
 
         UnrestPoints = 0;
 
         Leaders = new List<Leader>();
         Settlements = new List<Settlement>();
-        Settlements.Add(new Settlement(capitolName, new Hex(1, 1, Hex.EnumTerrainType.None))); //TODO : Correct None type.
-        Territory = new List<Hex>();
-        RuinResistances = new List<EnumRuinCategory>();
-        SkillTrainings = new Dictionary<Skill.EnumSkillList, Skill.EnumSkillTraining>();
-    }
+        Settlements.Add(new Settlement(capitolName, new Hex(1, 1, Heartland))); //TODO : Correct None type.
+        Territory = new List<Hex>();        
+        SkillTrainings = new Dictionary<Skill.EnumSkills, Skill.EnumSkillTraining>();
+        RuinThreshold = new Dictionary<EnumRuinCategory, int>();
+        RuinScore = new Dictionary<EnumRuinCategory, int>();
+        RuinItemPenalty = new Dictionary<EnumRuinCategory, int>();
+        Feats = new Dictionary<Feat.EnumFeats, string>();
+}
 
     public void BoostAbility(EnumAbilityScore ability, bool isFlaw = false)  
     {
@@ -192,26 +184,26 @@ public class Kingdom
         }
     }
 
-    public int RuinThreshold(EnumRuinCategory enumRuinCategory) 
-    {
-        int returnedValue = 10;
+   // public int RuinThreshold(EnumRuinCategory enumRuinCategory) 
+   // {
+   //     int returnedValue = 10;
+   //
+   //     foreach (EnumRuinCategory resistance in RuinResistances)
+   //     {
+   //         if(resistance == enumRuinCategory)
+   //         {
+   //             returnedValue += 2;
+   //         }
+   //     }
+   //
+   //     return returnedValue;
+   //
+   // }
 
-        foreach (EnumRuinCategory resistance in RuinResistances)
-        {
-            if(resistance == enumRuinCategory)
-            {
-                returnedValue += 2;
-            }
-        }
-
-        return returnedValue;
-
-    }
-
-    public int KingdomLevel()
-    {
-        return Math.Min(((ExperiencePoints / 1000) + 1), PlayersLevel);
-    }
+    //public int KingdomLevel()
+    //{
+    //    return Math.Min(((ExperiencePoints / 1000) + 1), PlayersLevel);
+    //}
 
     public int KingdomSize()
     {
@@ -265,33 +257,33 @@ public class Kingdom
         switch(Government) 
         {
             case EnumGovernment.Despotism:
-                TrainSkill(Skill.EnumSkillList.Intrigue);
-                TrainSkill(Skill.EnumSkillList.Warfare);
+                TrainSkill(Skill.EnumSkills.Intrigue);
+                TrainSkill(Skill.EnumSkills.Warfare);
                 break;
             case EnumGovernment.Feudalism:
-                TrainSkill(Skill.EnumSkillList.Defense);
-                TrainSkill(Skill.EnumSkillList.Trade);
+                TrainSkill(Skill.EnumSkills.Defense);
+                TrainSkill(Skill.EnumSkills.Trade);
                 break;
             case EnumGovernment.Oligarchy:
-                TrainSkill(Skill.EnumSkillList.Arts);
-                TrainSkill(Skill.EnumSkillList.Industry);
+                TrainSkill(Skill.EnumSkills.Arts);
+                TrainSkill(Skill.EnumSkills.Industry);
                 break;
             case EnumGovernment.Republic:
-                TrainSkill(Skill.EnumSkillList.Engineering);
-                TrainSkill(Skill.EnumSkillList.Politics);
+                TrainSkill(Skill.EnumSkills.Engineering);
+                TrainSkill(Skill.EnumSkills.Politics);
                 break;
             case EnumGovernment.Thaumocracy:
-                TrainSkill(Skill.EnumSkillList.Folklore);
-                TrainSkill(Skill.EnumSkillList.Magic);
+                TrainSkill(Skill.EnumSkills.Folklore);
+                TrainSkill(Skill.EnumSkills.Magic);
                 break;
             case EnumGovernment.Yeomanry:
-                TrainSkill(Skill.EnumSkillList.Agriculture);
-                TrainSkill(Skill.EnumSkillList.Wilderness);
+                TrainSkill(Skill.EnumSkills.Agriculture);
+                TrainSkill(Skill.EnumSkills.Wilderness);
                 break;
         }
     }
 
-    public void AssignFirstLeaderSkill(Skill.EnumSkillList addedSkill)
+    public void AssignFirstLeaderSkill(Skill.EnumSkills addedSkill)
     {
         if(SkillTrainings.Count > 2)
         {
@@ -300,7 +292,7 @@ public class Kingdom
         TrainSkill(addedSkill);
     }
 
-    public void AssignSecondLeaderSkill(Skill.EnumSkillList addedSkill)
+    public void AssignSecondLeaderSkill(Skill.EnumSkills addedSkill)
     {
         if (SkillTrainings.Count > 3)
         {
@@ -309,7 +301,7 @@ public class Kingdom
         TrainSkill(addedSkill);
     }
 
-    public void AssignThirdLeaderSkill(Skill.EnumSkillList addedSkill)
+    public void AssignThirdLeaderSkill(Skill.EnumSkills addedSkill)
     {
         if (SkillTrainings.Count > 4)
         {
@@ -318,7 +310,7 @@ public class Kingdom
         TrainSkill(addedSkill);
     }
 
-    public void AssignFourthLeaderSkill(Skill.EnumSkillList addedSkill)
+    public void AssignFourthLeaderSkill(Skill.EnumSkills addedSkill)
     {
         if (SkillTrainings.Count > 5)
         {
@@ -503,7 +495,7 @@ public class Kingdom
     {
         int returnedDC;
 
-        switch (KingdomLevel()) 
+        switch (KingdomLevel) 
         {
             case 1: returnedDC = 14; break;
             case 2: returnedDC = 15; break;
@@ -605,7 +597,7 @@ public class Kingdom
 
     public int RessourceDiceAmount()
     {
-        int amount = KingdomLevel() + 4;
+        int amount = KingdomLevel + 4;
 
         //TODO : Any reduction goes here.
 
@@ -619,7 +611,14 @@ public class Kingdom
 
     public bool EarnFame()
     {
-        if(FamePoints >= 3)
+        int FameThreshold = 3;
+
+        if(KingdomLevel >= 20)
+        {
+            FameThreshold++;
+        }
+
+        if (FamePoints >= FameThreshold)
         {
             return false;
         }
@@ -637,7 +636,7 @@ public class Kingdom
         return returnedResult;
     }
 
-    public EnumCheckResult UseSkill(Skill.EnumSkillList usedSkill)
+    public EnumCheckResult UseSkill(Skill.EnumSkills usedSkill)
     {
         int totalModifier = 0;
         int proficiencyBonus = 0;
@@ -645,42 +644,167 @@ public class Kingdom
         
         if (SkillTrainings.ContainsKey(usedSkill))
         {
-            proficiencyBonus += Skill.TrainingBonus(SkillTrainings[usedSkill]) + KingdomLevel();
+            proficiencyBonus += Skill.TrainingBonus(SkillTrainings[usedSkill]) + KingdomLevel;
         }
         
         if (SkillHasStatusBonusFromInvestedLeader(usedSkill))
         {
-            Math.Max(statusBonus, 1);
+            int bonusFromInvested = 1;
+            if (KingdomLevel >= 8) bonusFromInvested = 2;
+            if (KingdomLevel >= 16) bonusFromInvested = 3;
+            statusBonus = Math.Max(statusBonus, bonusFromInvested);
         }
 
         totalModifier += AbilityModifier(Skill.SkillList()[usedSkill].KeyAbility);
         totalModifier += proficiencyBonus;
         totalModifier += statusBonus;
+        totalModifier -= RuinItemPenalty[RuinCategoryByAbility(Skill.SkillList()[usedSkill].KeyAbility)];
 
         return KingdomCheck(ControlDC(), totalModifier);
     }
     
-    public void TrainSkill(Skill.EnumSkillList enumSkill, Skill.EnumSkillTraining skillTraining = Skill.EnumSkillTraining.Trained)
+    public void TrainSkill(Skill.EnumSkills enumSkill, Skill.EnumSkillTraining skillTraining = Skill.EnumSkillTraining.Trained)
     {
-        if(SkillTrainings[enumSkill] == skillTraining)
+        
+        if(SkillTrainings.ContainsKey(enumSkill) && SkillTrainings[enumSkill] == skillTraining)
         { 
-            throw new Exception("This skill is already trained."); 
+            throw new Exception("This skill is already at ." + skillTraining.ToString());
         }
 
         SkillTrainings[enumSkill] = skillTraining;
     }
 
-    public bool SkillHasStatusBonusFromInvestedLeader(Skill.EnumSkillList enumSkill)
+    public bool SkillHasStatusBonusFromInvestedLeader(Skill.EnumSkills enumSkill)
     {
         foreach (Leader forLeader in Leaders)
         {
-            if(forLeader.getInvested() && Leader.KeyAbilityForRole(forLeader.getRole()) == Skill.SkillList()[enumSkill].KeyAbility )
+            if(forLeader.getInvested() && Leader.KeyAbilityForRole(forLeader.getRole()) == Skill.SkillList()[enumSkill].KeyAbility)
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    public int UnrestStatusPenalty()
+    {
+        if (UnrestPoints < 0) throw new Exception("Unrest score can't be negative.");
+
+        if(UnrestPoints >= 15)
+        {
+            return 4;
+        }
+        if (UnrestPoints >= 10)
+        {
+            return 3;
+        }
+        if (UnrestPoints >= 5)
+        {
+            return 2;
+        }
+        if (UnrestPoints >= 1)
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+    public void AddRuin(int ruinAmount, EnumRuinCategory ruinCategory)
+    {
+        RuinScore[ruinCategory] += ruinAmount;
+        if(RuinScore[ruinCategory] > RuinThreshold[ruinCategory])
+        {
+            RuinScore[ruinCategory] -= RuinThreshold[ruinCategory];
+            RuinItemPenalty[ruinCategory] += 1;
+        }
+
+    }
+
+    public static EnumRuinCategory RuinCategoryByAbility(EnumAbilityScore enumAbility)
+    {
+        switch(enumAbility)
+        {
+            case EnumAbilityScore.Culture:
+                return EnumRuinCategory.Corruption;
+            case EnumAbilityScore.Economy:
+                return EnumRuinCategory.Crime;
+            case EnumAbilityScore.Loyalty:
+                return EnumRuinCategory.Strife;
+            case EnumAbilityScore.Stability:
+                return EnumRuinCategory.Decay;
+            default: throw new NotImplementedException("This ability score does'nt exist.");
+        }
+    }
+
+    public void AddXP(int xpAmount)
+    {
+        ExperiencePoints += xpAmount;
+    }
+
+    public void LevelUp()
+    {
+        if (ExperiencePoints < 1000)
+        {
+            return;
+        }
+
+        if(KingdomLevel >= PlayersLevel)
+        {
+            return;
+        }
+
+        ExperiencePoints -= 1000;
+        KingdomLevel += 1;
+
+        switch(KingdomLevel)
+        {
+            case 2:
+                break;
+            case 3:
+                break;
+            case 4:
+                Feats[Feat.EnumFeats.ExpansionExpert] = "";
+                Feats[Feat.EnumFeats.FineLiving] = "";
+                break;
+            case 5:
+                break;
+            case 6:
+                break;
+            case 7:
+                break;
+            case 8:
+                break;
+            case 9:
+                Feats[Feat.EnumFeats.ExpansionExpertPlus] = "";
+                break;
+            case 10:
+                Feats[Feat.EnumFeats.LifeOfLuxury] = "";
+                break;
+            case 11:
+                break;
+            case 12:
+                break;
+            case 13:
+                break;
+            case 14:
+                break;
+            case 15:
+                break;
+            case 16:
+                break;
+            case 17:
+                break;
+            case 18:
+                break;
+            case 19:
+                break;
+            case 20:
+                break;
+            case 21:
+                throw new NotSupportedException("You're too OP, stop right there !");
+        }
+                
     }
 }
 

@@ -17,10 +17,10 @@ internal class Program
         Valancie.AddLeader(new Leader("Sébaste Larivière", Leader.EnumRole.Ruler, true));
         Valancie.AddLeader(new Leader("Jacques Létourneau", Leader.EnumRole.None, false));
 
-        Skill skillTest = Valancie.Skills[Skill.EnumSkillList.Agriculture];
-        Console.WriteLine(skillTest.SkillName.ToString());
+        Valancie.TrainSkill(Skill.EnumSkills.Agriculture);
+        //Console.WriteLine(Valancie.SkillName.ToString());
 
-        Settlement ofTest = new Settlement("Test", new Hex(1, 1, Hex.EnumTerrainType.TEST));
+        Settlement ofTest = new Settlement("Test", new Hex(1, 1, Kingdom.EnumHeartland.Lake));
         ofTest.Name = "Test2";
         ofTest.IsCapital = true;
         ofTest.SettlementType = EnumSettlementType.Village;
