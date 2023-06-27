@@ -1,18 +1,47 @@
-﻿
+﻿public enum EnumSkills
+{
+    None,
+    Agriculture,
+    Arts,
+    Boating,
+    Defense,
+    Engineering,
+    Exploration,
+    Folklore,
+    Industry,
+    Intrigue,
+    Magic,
+    Politics,
+    Scholarship,
+    Statecraft,
+    Trade,
+    Warfare,
+    Wilderness
+}
+
+public enum EnumSkillTraining
+{
+    None,
+    Trained,
+    Expert,
+    Master,
+    Legendary
+}
+
 public class Skill
 {
     public EnumSkills SkillName
     { get; set; }
-    public Ability.EnumAbilityScore KeyAbility
+    public EnumAbilityScore KeyAbility
     {
         get; set;
     }
 
-    public static Dictionary<Skill.EnumSkills, Skill> SkillList()
+    public static Dictionary<EnumSkills, Skill> SkillList()
     {
-        Dictionary<Skill.EnumSkills, Skill> returnedMap = new Dictionary<Skill.EnumSkills, Skill>();
+        Dictionary<EnumSkills, Skill> returnedMap = new Dictionary<EnumSkills, Skill>();
        
-        foreach (Skill.EnumSkills forSkillEnum in (Skill.EnumSkills[])Skill.EnumSkills.GetValues(typeof(Skill.EnumSkills)))
+        foreach (EnumSkills forSkillEnum in (EnumSkills[])EnumSkills.GetValues(typeof(EnumSkills)))
         {
             returnedMap[forSkillEnum] = new Skill(forSkillEnum);
         }
@@ -30,60 +59,30 @@ public class Skill
             case EnumSkills.Folklore:
             case EnumSkills.Magic:
             case EnumSkills.Scholarship:
-                this.KeyAbility = Ability.EnumAbilityScore.Culture;
+                this.KeyAbility = EnumAbilityScore.Culture;
                 break;
             case EnumSkills.Boating:
             case EnumSkills.Exploration:
             case EnumSkills.Industry:
             case EnumSkills.Trade:
-                this.KeyAbility = Ability.EnumAbilityScore.Economy;
+                this.KeyAbility = EnumAbilityScore.Economy;
                 break;
             case EnumSkills.Intrigue:
             case EnumSkills.Politics:
             case EnumSkills.Statecraft:
             case EnumSkills.Warfare:
-                this.KeyAbility = Ability.EnumAbilityScore.Loyalty;
+                this.KeyAbility = EnumAbilityScore.Loyalty;
                 break;
             case EnumSkills.Agriculture:
             case EnumSkills.Defense:
             case EnumSkills.Engineering:
             case EnumSkills.Wilderness:
-                this.KeyAbility = Ability.EnumAbilityScore.Stability;
+                this.KeyAbility = EnumAbilityScore.Stability;
                 break;
             default: 
                 throw new Exception();
         }
-    }
-
-    public enum EnumSkills
-    {
-        None,
-        Agriculture,
-        Arts,
-        Boating,
-        Defense,
-        Engineering,
-        Exploration,
-        Folklore,
-        Industry,
-        Intrigue,
-        Magic,
-        Politics,
-        Scholarship,
-        Statecraft,
-        Trade,
-        Warfare,
-        Wilderness
-    }
-
-    public enum EnumSkillTraining
-    { 
-        None,
-        Trained,
-        Expert,
-        Master,
-        Legendary
-    }
+    }   
 
     public static int TrainingBonus(EnumSkillTraining skillTraining)
     {

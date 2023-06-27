@@ -1,4 +1,12 @@
-﻿
+﻿public enum EnumAbilityScore
+{
+    None,
+    Culture,
+    Economy,
+    Loyalty,
+    Stability
+}
+
 public class Ability
 {
     public EnumAbilityScore Name;
@@ -10,14 +18,7 @@ public class Ability
         Score = value;
     }
 
-    public enum EnumAbilityScore
-    {
-        None,
-        Culture,
-        Economy,
-        Loyalty,
-        Stability
-    }
+    
 
     public void BoostAbility(bool isFlaw = false)
     {

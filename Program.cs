@@ -1,7 +1,4 @@
-﻿
-using System.Diagnostics;
-
-internal class Program
+﻿internal class Program
 {
     private static void Main(string[] args)
     {
@@ -14,10 +11,10 @@ internal class Program
         Valancie.AssignCharter(Kingdom.EnumCharter.Exploration);
         Valancie.AssignHeartland(Kingdom.EnumHeartland.Plain);
         Valancie.AssignGovernment(Kingdom.EnumGovernment.Feudalism);
-        Valancie.AddLeader(new Leader("Sébaste Larivière", Leader.EnumRole.Ruler, true));
-        Valancie.AddLeader(new Leader("Jacques Létourneau", Leader.EnumRole.None, false));
+        Valancie.AddLeader(new Leader("Sébaste Larivière", EnumRole.Ruler, true));
+        Valancie.AddLeader(new Leader("Jacques Létourneau", EnumRole.None, false));
 
-        Valancie.TrainSkill(Skill.EnumSkills.Agriculture);
+        Valancie.TrainSkill(EnumSkills.Agriculture);
         //Console.WriteLine(Valancie.SkillName.ToString());
 
         Settlement ofTest = new Settlement("Test", new Hex(1, 1, Kingdom.EnumHeartland.Lake));
