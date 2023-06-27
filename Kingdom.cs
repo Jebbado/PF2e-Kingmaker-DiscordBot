@@ -12,17 +12,13 @@ public class Kingdom
     private int ExperiencePoints;
     private int KingdomLevel;
     private int PlayersLevel;
-    private int RessourcePoints;
-    //private int KingdomSize;
 
-    private int CultureAbilityScore;    
-    private int EconomyAbilityScore;
-    private int LoyaltyAbilityScore;
-    private int StabilityAbilityScore;
+    private Dictionary<Ability.EnumAbilityScore, Ability> Abilities;
 
     private int FamePoints;
     private int UnrestPoints;
 
+    private int RessourcePoints;
     private int FoodCommodities;
     private int LumberCommodities;
     private int LuxuriesCommodities;
@@ -34,23 +30,14 @@ public class Kingdom
     private List<Settlement> Settlements;
 
     private List<Hex> Territory;
-
-    //private List<EnumRuinCategory> RuinResistances;
+    
     private Dictionary<EnumRuinCategory, int> RuinScore;
     private Dictionary<EnumRuinCategory, int> RuinThreshold;
     private Dictionary<EnumRuinCategory, int> RuinItemPenalty;    
 
     private Dictionary<Skill.EnumSkills, Skill.EnumSkillTraining> SkillTrainings;
-    private Dictionary<Feat.EnumFeats, string> Feats;
 
-    public enum EnumAbilityScore
-    {
-        None,
-        Culture,
-        Economy,
-        Loyalty,
-        Stability
-    }
+    private Dictionary<Feat.EnumFeats, string> Feats;    
 
     public enum EnumCharter
     {
@@ -94,8 +81,6 @@ public class Kingdom
         Decay
     }
 
-   
-
     public Kingdom(string name, string capitolName)
     {
         KingdomName = name;
@@ -103,107 +88,35 @@ public class Kingdom
 
         Charter = EnumCharter.None;
         Heartland = EnumHeartland.None;
-        Government = EnumGovernment.None;
-
-        CultureAbilityScore = 10;
-        EconomyAbilityScore = 10;
-        LoyaltyAbilityScore = 10;
-        StabilityAbilityScore = 10;
+        Government = EnumGovernment.None;        
 
         KingdomLevel = 1;
 
         UnrestPoints = 0;
 
+        Abilities = new Dictionary<Ability.EnumAbilityScore, Ability>();
+        Abilities[Ability.EnumAbilityScore.Culture] = new Ability(Ability.EnumAbilityScore.Culture);
+        Abilities[Ability.EnumAbilityScore.Economy] = new Ability(Ability.EnumAbilityScore.Economy);
+        Abilities[Ability.EnumAbilityScore.Loyalty] = new Ability(Ability.EnumAbilityScore.Loyalty);
+        Abilities[Ability.EnumAbilityScore.Stability] = new Ability(Ability.EnumAbilityScore.Stability);
+
         Leaders = new List<Leader>();
+
         Settlements = new List<Settlement>();
-        Settlements.Add(new Settlement(capitolName, new Hex(1, 1, Heartland))); //TODO : Correct None type.
-        Territory = new List<Hex>();        
+        Hex InitialHex = new Hex(1, 1, Heartland);
+        Settlements.Add(new Settlement(capitolName, InitialHex));
+        Territory = new List<Hex>();
+        Territory.Add(InitialHex);
+
         SkillTrainings = new Dictionary<Skill.EnumSkills, Skill.EnumSkillTraining>();
+
         RuinThreshold = new Dictionary<EnumRuinCategory, int>();
         RuinScore = new Dictionary<EnumRuinCategory, int>();
         RuinItemPenalty = new Dictionary<EnumRuinCategory, int>();
+
         Feats = new Dictionary<Feat.EnumFeats, string>();
-}
-
-    public void BoostAbility(EnumAbilityScore ability, bool isFlaw = false)  
-    {
-        switch (ability)
-        {
-            case EnumAbilityScore.Culture:
-                CultureAbilityScore += 2 * (isFlaw ? -1 : 1);
-                break;
-            case EnumAbilityScore.Economy:
-                EconomyAbilityScore += 2 * (isFlaw ? -1 : 1);
-                break;
-            case EnumAbilityScore.Loyalty:
-                LoyaltyAbilityScore += 2 * (isFlaw ? -1 : 1);
-                break;
-            case EnumAbilityScore.Stability:
-                StabilityAbilityScore += 2 * (isFlaw ? -1 : 1);
-                break;
-            default:
-                Console.WriteLine("Invalid Ability.");
-                break;
-        }
-    }
-
-    public int CultureModifier()
-    {
-        return (CultureAbilityScore - 10) / 2;
-    }
-
-    public int EconomyModifier()
-    {
-        return (EconomyAbilityScore - 10) / 2;
-    }
-
-    public int LoyaltyModifier()
-    {
-        return (LoyaltyAbilityScore - 10) / 2;
-    }
-
-    public int StabilityModifier()
-    {
-        return (StabilityAbilityScore - 10) / 2;
-    }
-
-    public int AbilityModifier(EnumAbilityScore abilityScore)
-    {
-        switch(abilityScore) 
-        {
-            case EnumAbilityScore.Economy:
-                return EconomyModifier();
-            case EnumAbilityScore.Loyalty:
-                return LoyaltyModifier();
-            case EnumAbilityScore.Stability:
-                return StabilityModifier();
-            case EnumAbilityScore.Culture:
-                return CultureModifier();
-            default: 
-                throw new NotImplementedException();
-        }
-    }
-
-   // public int RuinThreshold(EnumRuinCategory enumRuinCategory) 
-   // {
-   //     int returnedValue = 10;
-   //
-   //     foreach (EnumRuinCategory resistance in RuinResistances)
-   //     {
-   //         if(resistance == enumRuinCategory)
-   //         {
-   //             returnedValue += 2;
-   //         }
-   //     }
-   //
-   //     return returnedValue;
-   //
-   // }
-
-    //public int KingdomLevel()
-    //{
-    //    return Math.Min(((ExperiencePoints / 1000) + 1), PlayersLevel);
-    //}
+    }  
+    
 
     public int KingdomSize()
     {
@@ -319,61 +232,61 @@ public class Kingdom
         TrainSkill(addedSkill);
     }
 
-    public void FinalizeAbilityScore(EnumAbilityScore charterChoice, EnumAbilityScore governmentChoice,
-                                        EnumAbilityScore freeChoice1, EnumAbilityScore freeChoice2)
+    public void FinalizeAbilityScore(Ability.EnumAbilityScore charterChoice, Ability.EnumAbilityScore governmentChoice,
+                                        Ability.EnumAbilityScore freeChoice1, Ability.EnumAbilityScore freeChoice2)
     {
         switch (Charter)
         {
             case EnumCharter.Conquest:
-                if (charterChoice == EnumAbilityScore.Stability || charterChoice == EnumAbilityScore.Economy)
+                if (charterChoice == Ability.EnumAbilityScore.Stability || charterChoice == Ability.EnumAbilityScore.Economy)
                 {
-                    BoostAbility(charterChoice);
+                    Abilities[charterChoice].BoostAbility();
                 }
                 else
                 {
                     throw new Exception("You must choose a valid ability boost.");
                 }
-                BoostAbility(EnumAbilityScore.Loyalty);
-                BoostAbility(EnumAbilityScore.Culture, true);
+                Abilities[Ability.EnumAbilityScore.Loyalty].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Culture].BoostAbility(true);
                 break;
             case EnumCharter.Expansion:
-                if (charterChoice == EnumAbilityScore.Loyalty || charterChoice == EnumAbilityScore.Economy)
+                if (charterChoice == Ability.EnumAbilityScore.Loyalty || charterChoice == Ability.EnumAbilityScore.Economy)
                 {
-                    BoostAbility(charterChoice);
+                    Abilities[charterChoice].BoostAbility();
                 }
                 else
                 {
                     throw new Exception("You must choose a valid ability boost.");
                 }
-                BoostAbility(EnumAbilityScore.Culture);
-                BoostAbility(EnumAbilityScore.Stability, true);
+                Abilities[Ability.EnumAbilityScore.Culture].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Stability].BoostAbility(true);
                 break;
             case EnumCharter.Exploration:
-                if (charterChoice == EnumAbilityScore.Culture || charterChoice == EnumAbilityScore.Loyalty)
+                if (charterChoice == Ability.EnumAbilityScore.Culture || charterChoice == Ability.EnumAbilityScore.Loyalty)
                 {
-                    BoostAbility(charterChoice);
+                    Abilities[charterChoice].BoostAbility();
                 }
                 else
                 {
                     throw new Exception("You must choose a valid ability boost.");
                 }
-                BoostAbility(EnumAbilityScore.Stability);
-                BoostAbility(EnumAbilityScore.Economy, true);
+                Abilities[Ability.EnumAbilityScore.Stability].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Economy].BoostAbility(true);
                 break;
             case EnumCharter.Grant:
-                if (charterChoice == EnumAbilityScore.Culture || charterChoice == EnumAbilityScore.Stability)
+                if (charterChoice == Ability.EnumAbilityScore.Culture || charterChoice == Ability.EnumAbilityScore.Stability)
                 {                
-                    BoostAbility(charterChoice);
+                    Abilities[charterChoice].BoostAbility();
                 }
                 else
                 {
                     throw new Exception("You must choose a valid ability boost.");
                 }
-                BoostAbility(EnumAbilityScore.Economy);
-                BoostAbility(EnumAbilityScore.Loyalty, true);
+                Abilities[Ability.EnumAbilityScore.Economy].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Loyalty].BoostAbility(true);
                 break;
             case EnumCharter.Open:
-                BoostAbility(charterChoice);
+                Abilities[charterChoice].BoostAbility();
                 break;
             default:
                 throw new Exception("The Kingdom charter is not valid.");
@@ -383,19 +296,19 @@ public class Kingdom
         {
             case EnumHeartland.Forest:
             case EnumHeartland.Swamp:
-                BoostAbility(EnumAbilityScore.Culture);
+                Abilities[Ability.EnumAbilityScore.Culture].BoostAbility();
                 break;
             case EnumHeartland.Hill:
             case EnumHeartland.Plain:
-                BoostAbility(EnumAbilityScore.Loyalty);
+                Abilities[Ability.EnumAbilityScore.Loyalty].BoostAbility();
                 break;
             case EnumHeartland.Lake:
             case EnumHeartland.River:
-                BoostAbility(EnumAbilityScore.Economy);
+                Abilities[Ability.EnumAbilityScore.Economy].BoostAbility();
                 break;
             case EnumHeartland.Mountain:
             case EnumHeartland.Ruin:
-                BoostAbility(EnumAbilityScore.Stability);
+                Abilities[Ability.EnumAbilityScore.Stability].BoostAbility();
                 break;
             default:
                 throw new Exception("The Kingdom heartland is not valid.");
@@ -404,58 +317,58 @@ public class Kingdom
         switch (Government)
         {
             case EnumGovernment.Despotism:
-                if (governmentChoice != EnumAbilityScore.Culture && governmentChoice != EnumAbilityScore.Loyalty)
+                if (governmentChoice != Ability.EnumAbilityScore.Culture && governmentChoice != Ability.EnumAbilityScore.Loyalty)
                 {                
                     throw new Exception("You must choose a valid government ability boost.");
                 }
-                BoostAbility(governmentChoice);
-                BoostAbility(EnumAbilityScore.Stability);
-                BoostAbility(EnumAbilityScore.Economy);
+                Abilities[governmentChoice].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Stability].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Economy].BoostAbility();
                 break;
             case EnumGovernment.Feudalism:
-                if (governmentChoice != EnumAbilityScore.Economy && governmentChoice != EnumAbilityScore.Loyalty)
+                if (governmentChoice != Ability.EnumAbilityScore.Economy && governmentChoice != Ability.EnumAbilityScore.Loyalty)
                 {
                     throw new Exception("You must choose a valid government ability boost.");
                 }
-                BoostAbility(governmentChoice);
-                BoostAbility(EnumAbilityScore.Stability);
-                BoostAbility(EnumAbilityScore.Culture);
+                Abilities[governmentChoice].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Stability].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Culture].BoostAbility();
                 break;
             case EnumGovernment.Oligarchy:
-                if (governmentChoice != EnumAbilityScore.Culture && governmentChoice != EnumAbilityScore.Stability)
+                if (governmentChoice != Ability.EnumAbilityScore.Culture && governmentChoice != Ability.EnumAbilityScore.Stability)
                 {
                     throw new Exception("You must choose a valid government ability boost.");
                 }
-                BoostAbility(governmentChoice);
-                BoostAbility(EnumAbilityScore.Loyalty);
-                BoostAbility(EnumAbilityScore.Economy);
+                Abilities[governmentChoice].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Loyalty].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Economy].BoostAbility();
                 break;
             case EnumGovernment.Republic:
-                if (governmentChoice == EnumAbilityScore.Culture & governmentChoice == EnumAbilityScore.Economy)
+                if (governmentChoice == Ability.EnumAbilityScore.Culture & governmentChoice == Ability.EnumAbilityScore.Economy)
                 {
                     throw new Exception("You must choose a valid government ability boost.");
                 }
-                BoostAbility(governmentChoice);
-                BoostAbility(EnumAbilityScore.Stability);
-                BoostAbility(EnumAbilityScore.Loyalty);
+                Abilities[governmentChoice].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Stability].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Loyalty].BoostAbility();
                 break;
             case EnumGovernment.Thaumocracy:
-                if (governmentChoice == EnumAbilityScore.Stability & governmentChoice == EnumAbilityScore.Loyalty)
+                if (governmentChoice == Ability.EnumAbilityScore.Stability & governmentChoice == Ability.EnumAbilityScore.Loyalty)
                 {
                     throw new Exception("You must choose a valid government ability boost.");
                 }
-                BoostAbility(EnumAbilityScore.Stability);
-                BoostAbility(EnumAbilityScore.Culture);
-                BoostAbility(EnumAbilityScore.Economy);
+                Abilities[Ability.EnumAbilityScore.Stability].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Culture].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Economy].BoostAbility();
                 break;
             case EnumGovernment.Yeomanry:
-                if (governmentChoice == EnumAbilityScore.Stability && governmentChoice == EnumAbilityScore.Economy)
+                if (governmentChoice == Ability.EnumAbilityScore.Stability && governmentChoice == Ability.EnumAbilityScore.Economy)
                 {
                     throw new Exception("You must choose a valid government ability boost.");
                 }
-                BoostAbility(governmentChoice);
-                BoostAbility(EnumAbilityScore.Culture);
-                BoostAbility(EnumAbilityScore.Loyalty);
+                Abilities[governmentChoice].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Culture].BoostAbility();
+                Abilities[Ability.EnumAbilityScore.Loyalty].BoostAbility();
                 break;
             default:
                 throw new Exception("The Kingdom government is not valid.");
@@ -465,8 +378,8 @@ public class Kingdom
         {
             throw new Exception("You must choose two different additional ability boosts.");
         }
-        BoostAbility(freeChoice1);
-        BoostAbility(freeChoice2);
+        Abilities[freeChoice1].BoostAbility();
+        Abilities[freeChoice2].BoostAbility();
     }
 
     public void AddLeader(Leader addedLeader)
@@ -655,7 +568,7 @@ public class Kingdom
             statusBonus = Math.Max(statusBonus, bonusFromInvested);
         }
 
-        totalModifier += AbilityModifier(Skill.SkillList()[usedSkill].KeyAbility);
+        totalModifier += Abilities[Skill.SkillList()[usedSkill].KeyAbility].Modifier();
         totalModifier += proficiencyBonus;
         totalModifier += statusBonus;
         totalModifier -= RuinItemPenalty[RuinCategoryByAbility(Skill.SkillList()[usedSkill].KeyAbility)];
@@ -721,17 +634,17 @@ public class Kingdom
 
     }
 
-    public static EnumRuinCategory RuinCategoryByAbility(EnumAbilityScore enumAbility)
+    public static EnumRuinCategory RuinCategoryByAbility(Ability.EnumAbilityScore enumAbility)
     {
         switch(enumAbility)
         {
-            case EnumAbilityScore.Culture:
+            case Ability.EnumAbilityScore.Culture:
                 return EnumRuinCategory.Corruption;
-            case EnumAbilityScore.Economy:
+            case Ability.EnumAbilityScore.Economy:
                 return EnumRuinCategory.Crime;
-            case EnumAbilityScore.Loyalty:
+            case Ability.EnumAbilityScore.Loyalty:
                 return EnumRuinCategory.Strife;
-            case EnumAbilityScore.Stability:
+            case Ability.EnumAbilityScore.Stability:
                 return EnumRuinCategory.Decay;
             default: throw new NotImplementedException("This ability score does'nt exist.");
         }

@@ -3,7 +3,7 @@ public class Skill
 {
     public EnumSkills SkillName
     { get; set; }
-    public Kingdom.EnumAbilityScore KeyAbility
+    public Ability.EnumAbilityScore KeyAbility
     {
         get; set;
     }
@@ -30,25 +30,25 @@ public class Skill
             case EnumSkills.Folklore:
             case EnumSkills.Magic:
             case EnumSkills.Scholarship:
-                this.KeyAbility = Kingdom.EnumAbilityScore.Culture;
+                this.KeyAbility = Ability.EnumAbilityScore.Culture;
                 break;
             case EnumSkills.Boating:
             case EnumSkills.Exploration:
             case EnumSkills.Industry:
             case EnumSkills.Trade:
-                this.KeyAbility = Kingdom.EnumAbilityScore.Economy;
+                this.KeyAbility = Ability.EnumAbilityScore.Economy;
                 break;
             case EnumSkills.Intrigue:
             case EnumSkills.Politics:
             case EnumSkills.Statecraft:
             case EnumSkills.Warfare:
-                this.KeyAbility = Kingdom.EnumAbilityScore.Loyalty;
+                this.KeyAbility = Ability.EnumAbilityScore.Loyalty;
                 break;
             case EnumSkills.Agriculture:
             case EnumSkills.Defense:
             case EnumSkills.Engineering:
             case EnumSkills.Wilderness:
-                this.KeyAbility = Kingdom.EnumAbilityScore.Stability;
+                this.KeyAbility = Ability.EnumAbilityScore.Stability;
                 break;
             default: 
                 throw new Exception();
