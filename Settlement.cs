@@ -10,22 +10,10 @@ public enum EnumSettlementType
 
 public class Settlement
 {
-    public string Name
-    {
-        get;
-        set;
-    }
-
-    public bool IsCapital
-    {
-        get;
-        set;
-    }
-
+    public string Name { get; set; }
+    public bool IsCapital { get; set; }
     public Hex SettlementHex { get; set; }
-
-    public EnumSettlementType SettlementType
-    { get; set; }
+    public EnumSettlementType SettlementType { get; set; }
 
     private List<UrbanGrid> UrbanGrids = new List<UrbanGrid>();
 

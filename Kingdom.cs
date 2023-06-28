@@ -17,11 +17,7 @@
     private int UnrestPoints;
 
     private int RessourcePoints;
-    private int FoodCommodities;
-    private int LumberCommodities;
-    private int LuxuriesCommodities;
-    private int OreCommodities;
-    private int StoneCommodities;
+    private Dictionary<EnumCommodity, Commodity> Commodities;
 
     private List<Leader> Leaders;
 
@@ -113,6 +109,13 @@
         RuinItemPenalty = new Dictionary<EnumRuinCategory, int>();
 
         Feats = new Dictionary<EnumFeats, string>();
+
+        Commodities = new Dictionary<EnumCommodity, Commodity>();
+        Commodities[EnumCommodity.Food] = new Commodity(EnumCommodity.Food);
+        Commodities[EnumCommodity.Lumber] = new Commodity(EnumCommodity.Lumber);
+        Commodities[EnumCommodity.Stone] = new Commodity(EnumCommodity.Stone);
+        Commodities[EnumCommodity.Ore] = new Commodity(EnumCommodity.Ore);
+        Commodities[EnumCommodity.Luxuries] = new Commodity(EnumCommodity.Luxuries);
     }  
     
 
@@ -342,7 +345,7 @@
                 Abilities[EnumAbilityScore.Economy].BoostAbility();
                 break;
             case EnumGovernment.Republic:
-                if (governmentChoice == EnumAbilityScore.Culture & governmentChoice == EnumAbilityScore.Economy)
+                if (governmentChoice != EnumAbilityScore.Culture && governmentChoice != EnumAbilityScore.Economy)
                 {
                     throw new Exception("You must choose a valid government ability boost.");
                 }
@@ -351,7 +354,7 @@
                 Abilities[EnumAbilityScore.Loyalty].BoostAbility();
                 break;
             case EnumGovernment.Thaumocracy:
-                if (governmentChoice == EnumAbilityScore.Stability & governmentChoice == EnumAbilityScore.Loyalty)
+                if (governmentChoice != EnumAbilityScore.Stability && governmentChoice != EnumAbilityScore.Loyalty)
                 {
                     throw new Exception("You must choose a valid government ability boost.");
                 }
@@ -360,7 +363,7 @@
                 Abilities[EnumAbilityScore.Economy].BoostAbility();
                 break;
             case EnumGovernment.Yeomanry:
-                if (governmentChoice == EnumAbilityScore.Stability && governmentChoice == EnumAbilityScore.Economy)
+                if (governmentChoice != EnumAbilityScore.Stability && governmentChoice != EnumAbilityScore.Economy)
                 {
                     throw new Exception("You must choose a valid government ability boost.");
                 }
@@ -466,45 +469,9 @@
         else { throw new ArgumentOutOfRangeException(); }
     }
 
-    public int KingdomSizeCommodityStorageModifier()
-    {
-        if (1 <= KingdomSize() || KingdomSize() <= 9)
-        { return 4; }
-        else if (10 < KingdomSize() || KingdomSize() < 24)
-        { return 8; }
-        else if (25 < KingdomSize() || KingdomSize() < 49)
-        { return 12; }
-        else if (50 < KingdomSize() || KingdomSize() < 99)
-        { return 16; }
-        else if (KingdomSize() > 100)
-        { return 20; }
-        else { throw new ArgumentOutOfRangeException(); }
-    }
+    
 
-    public int FoodCommoditiesStorage()
-    {
-        return KingdomSizeCommodityStorageModifier();
-    }
-
-    public int LuxuriesCommoditiesStorage()
-    {
-        return KingdomSizeCommodityStorageModifier();
-    }
-
-    public int LumberCommoditiesStorage()
-    {
-        return KingdomSizeCommodityStorageModifier();
-    }
-
-    public int StoneCommoditiesStorage()
-    {
-        return KingdomSizeCommodityStorageModifier();
-    }
-
-    public int OreCommoditiesStorage()
-    {
-        return KingdomSizeCommodityStorageModifier();
-    }
+   
 
     public int RessourceDiceAmount()
     {

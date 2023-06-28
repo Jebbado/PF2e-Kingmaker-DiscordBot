@@ -9,8 +9,8 @@
 
 public class Ability
 {
-    public EnumAbilityScore Name;
-    int Score;
+    private EnumAbilityScore Name;
+    private int Score { get; set; }
 
     public Ability(EnumAbilityScore name, int value = 10)
     {
