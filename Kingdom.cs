@@ -477,6 +477,9 @@
     {
         int amount = KingdomLevel + 4;
 
+        if (Feats.ContainsKey(EnumFeats.InsiderTrading))
+        { amount++; }
+
         //TODO : Any reduction goes here.
 
         return Math.Max(amount, 0);

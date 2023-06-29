@@ -12,10 +12,10 @@ public class Commodity
     public EnumCommodity Name { get; set; }
     public int Amount;
 
-    public Commodity(EnumCommodity name) 
+    public Commodity(EnumCommodity name, int amount = 0) 
     {
         Name = name;
-        Amount = 0;
+        Amount = amount;
     }
 
     public void AddCommodity(int addedAmount, ref Kingdom kingdom)

@@ -16,18 +16,20 @@ public class Leader
     private string Name;
     private string SomeKey; //Link with Discord ID to know which member is the Leader. Hypothetical futur usage.
     private EnumRole Role;
-    private bool Invested;        
+    private bool Invested;
+    private bool IsPlayerCharacter;
 
-    public Leader(string name, EnumRole role, bool invested)
+    public Leader(string name, EnumRole role, bool invested, bool isPlayerCharacter = true)
     {
         if (name == null || name == "") throw new Exception("Name must not be empty.");
 
         if (role == EnumRole.None && invested) throw new Exception("A leader without a Role can't be Invested.");
 
-        this.Name = name;
-        this.Role = role;
-        this.Invested = invested;
-        this.SomeKey = "";
+        Name = name;
+        Role = role;
+        Invested = invested;
+        SomeKey = "";
+        IsPlayerCharacter = isPlayerCharacter;
     }
 
     public string getName()
