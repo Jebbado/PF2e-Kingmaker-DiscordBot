@@ -23,7 +23,7 @@
 
     private List<Settlement> Settlements;
 
-    private List<Hex> Territory;
+    private Dictionary<string, Hex> Territory = new Dictionary<string, Hex>();
     
     private Dictionary<EnumRuinCategory, int> RuinScore;
     private Dictionary<EnumRuinCategory, int> RuinThreshold;
@@ -97,10 +97,9 @@
         Leaders = new List<Leader>();
 
         Settlements = new List<Settlement>();
-        Hex InitialHex = new Hex(1, 1, Heartland);
-        Settlements.Add(new Settlement(capitolName, InitialHex));
-        Territory = new List<Hex>();
-        Territory.Add(InitialHex);
+        Hex InitialHex = new Hex(0, 0, Heartland);
+        Settlements.Add(new Settlement(capitolName, InitialHex));        
+        Territory[InitialHex.Key()] = InitialHex;
 
         SkillTrainings = new Dictionary<EnumSkills, EnumSkillTraining>();
 

@@ -84,24 +84,24 @@ public enum EnumStructure
 public class Structure
 {
     private EnumStructure Name;
-    private EnumStructureType Type;
+    public EnumStructureType StructureType { get; }
     private int RequiredLevel;
-    private int LotsOccupied;
+    public int LotsOccupied { get; }
     private int RPCost;
     List<Commodity> CommoditiesCost;
     Dictionary<EnumSkills, EnumSkillTraining> ConstructionSkills;
     private int ConstructionDC;
-    private EnumStructure UpgradeFrom;    
+    public EnumStructure UpgradeFrom { get; }
     private bool IsEdifice;
     private bool IsFamous;
     private bool IsInfamous;
-    private bool IsResidential;     
+    private bool IsResidential;    
 
     public Structure(EnumStructure name, EnumStructureType type, int level, int lots, int rp, List<Commodity>  commodities, Dictionary<EnumSkills, EnumSkillTraining> skills,
                     int dc, EnumStructure upFrom, bool edifice, bool fame, bool infamy, bool residential)
     { 
         Name = name;
-        Type = type;
+        StructureType = type;
         RequiredLevel = level;
         LotsOccupied = lots;
         RPCost = rp;

@@ -1,4 +1,26 @@
-﻿
+﻿public enum EnumTerrainType
+{
+    None,
+    TEST
+}
+
+public enum EnumTerrainFeature
+{
+    None,
+    Bridge,
+    Farmland,
+    Freeholf,
+    Landmark,
+    Refuge,
+    ResourceLumber,
+    ResourceOre,
+    ResourceStone,
+    Ruins,
+    Settlement,
+    Structure,
+    WorkSite
+}
+
 public class Hex
 {
     private int CoordinateX;
@@ -14,14 +36,13 @@ public class Hex
         //IsReconnoitered = false;
     }
 
-    public enum EnumTerrainType
-    {
-        None,
-        TEST
-    }
-
     public void Reconnoiter()
     {
         //IsReconnoitered=true;
+    }
+
+    public string Key()
+    {
+        return CoordinateX + ":" + CoordinateY;
     }
 }
