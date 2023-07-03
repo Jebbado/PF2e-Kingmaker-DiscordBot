@@ -15,6 +15,7 @@ public enum EnumStep
     FinalizeAbilityScores,
     ChooseLeaders,
     FirstVillage,
+    ChooseFameInfamy,
     AssignLeadership,
     AdjustUnrest,
     RessourceCollection,
@@ -98,8 +99,35 @@ public class Game
     }
 
     public void EndLeaderStep(string name) 
-    { 
+    {
+        if (Turns[TurnID].Phase != EnumPhase.Creation) { throw new Exception("You're not in the 'Kingdom Creation' phase."); }
+        if (Turns[TurnID].Step != EnumStep.ChooseLeaders) { throw new Exception("You're not at the 'Choose Leaders' step."); }
+
+        if(Kingdom.InvestedLeadersCount() < 4) { throw new Exception("You must have 4 Invested Leaders before ending"); }
+
         Turns[TurnID].Step = EnumStep.FirstVillage; 
+    }
+
+    public void CreateCapital(string name, EnumStructure initialStructure = EnumStructure.None)
+    {
+        if (Turns[TurnID].Phase != EnumPhase.Creation) { throw new Exception("You're not in the 'Kingdom Creation' phase."); }
+        if (Turns[TurnID].Step != EnumStep.FirstVillage) { throw new Exception("You're not at the 'Forst Village' step."); }
+
+        Kingdom.AddSettlement(name, 0, 0, true);
+        if (initialStructure != EnumStructure.None) 
+        { 
+            Kingdom.CapitalSettlement().PlaceStructure(initialStructure, 1);
+        }
+
+        Turns[TurnID].Step = EnumStep.ChooseFameInfamy;
+    }
+
+    public void ChooseFameInfamy(EnumFameAspiration fame)
+    {
+        if (Turns[TurnID].Phase != EnumPhase.Creation) { throw new Exception("You're not in the 'Kingdom Creation' phase."); }
+        if (Turns[TurnID].Step != EnumStep.ChooseFameInfamy) { throw new Exception("You're not at the 'Fame or Infamy ?' step."); }
+
+        Kingdom.ChooseFame(fame);
     }
 }
 

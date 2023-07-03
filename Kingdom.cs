@@ -39,6 +39,14 @@ public enum EnumRuinCategory
     Strife,
     Decay
 }
+
+public enum EnumFameAspiration
+{
+    None,
+    Fame,
+    Infamy
+}
+
 public class Kingdom
 {
     private string KingdomName;    
@@ -54,6 +62,7 @@ public class Kingdom
     private Dictionary<EnumAbilityScore, Ability> Abilities;
 
     private int FamePoints;
+    private EnumFameAspiration FameAspiration = EnumFameAspiration.None;
     private int UnrestPoints;
 
     private int RessourcePoints;
@@ -380,6 +389,14 @@ public class Kingdom
         }
         Abilities[freeChoice1].BoostAbility();
         Abilities[freeChoice2].BoostAbility();
+    }
+
+    public void ChooseFame(EnumFameAspiration fame)
+    {
+        if(FameAspiration != EnumFameAspiration.None) { throw new Exception("You can't change your Fame Aspiration after Kingdom Creation."); }
+        if (fame == EnumFameAspiration.None) { throw new Exception("You must choose a valid Fame Aspiration."); }
+
+        FameAspiration = fame;
     }
 
     public void AddSettlement(string settlementName, int posX = 0, int posY = 0, bool isCapital = false)
@@ -729,6 +746,32 @@ public class Kingdom
                 throw new NotSupportedException("You're too OP, stop right there !");
         }
                 
+    }
+
+    public int InvestedLeadersCount() 
+    {
+        int amount = 0;
+        foreach (Leader forLeader in Leaders)
+        {
+            if(forLeader.getInvested())
+            {
+                amount++;
+            }
+        }
+        return amount; 
+    }
+
+    public Settlement CapitalSettlement()
+    {
+        foreach (Settlement forSettlement in Settlements)
+        {
+            if(forSettlement.IsCapital)
+            {
+                return forSettlement;
+            }
+        }
+
+        throw new NotSupportedException("There is no capital. Something went wrong.");
     }
 }
 
