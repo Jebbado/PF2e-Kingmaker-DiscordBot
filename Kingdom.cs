@@ -1,7 +1,47 @@
-﻿public class Kingdom
+﻿public enum EnumCharter
 {
-    private string KingdomName;
-    private string CapitolName;
+    None,
+    Conquest,
+    Expansion,
+    Exploration,
+    Grant,
+    Open
+}
+
+public enum EnumHeartland
+{
+    None,
+    Forest,
+    Swamp,
+    Hill,
+    Plain,
+    Lake,
+    River,
+    Mountain,
+    Ruin
+}
+
+public enum EnumGovernment
+{
+    None,
+    Despotism,
+    Feudalism,
+    Oligarchy,
+    Republic,
+    Thaumocracy,
+    Yeomanry
+}
+
+public enum EnumRuinCategory
+{
+    Corruption,
+    Crime,
+    Strife,
+    Decay
+}
+public class Kingdom
+{
+    private string KingdomName;    
 
     private EnumCharter Charter;
     private EnumHeartland Heartland;
@@ -31,54 +71,11 @@
 
     private Dictionary<EnumSkills, EnumSkillTraining> SkillTrainings;
 
-    private Dictionary<EnumFeats, string> Feats;    
+    private List<EnumFeats> Feats;
 
-    public enum EnumCharter
-    {
-        None,
-        Conquest,
-        Expansion,
-        Exploration,
-        Grant,
-        Open
-    }
-
-    public enum EnumHeartland
-    {
-        None,
-        Forest,
-        Swamp,
-        Hill,
-        Plain,
-        Lake,
-        River,
-        Mountain,
-        Ruin
-    }
-
-    public enum EnumGovernment
-    {
-        None,
-        Despotism,
-        Feudalism,
-        Oligarchy,
-        Republic,
-        Thaumocracy,
-        Yeomanry
-    }
-
-    public enum EnumRuinCategory
-    {
-        Corruption,
-        Crime,
-        Strife,
-        Decay
-    }
-
-    public Kingdom(string name, string capitolName)
+    public Kingdom(string name)
     {
         KingdomName = name;
-        CapitolName = capitolName;
 
         Charter = EnumCharter.None;
         Heartland = EnumHeartland.None;
@@ -96,10 +93,7 @@
 
         Leaders = new List<Leader>();
 
-        Settlements = new List<Settlement>();
-        Hex InitialHex = new Hex(0, 0, Heartland);
-        Settlements.Add(new Settlement(capitolName, InitialHex));        
-        Territory[InitialHex.Key()] = InitialHex;
+        Settlements = new List<Settlement>();     
 
         SkillTrainings = new Dictionary<EnumSkills, EnumSkillTraining>();
 
@@ -107,7 +101,7 @@
         RuinScore = new Dictionary<EnumRuinCategory, int>();
         RuinItemPenalty = new Dictionary<EnumRuinCategory, int>();
 
-        Feats = new Dictionary<EnumFeats, string>();
+        Feats = new List<EnumFeats>();
 
         Commodities = new Dictionary<EnumCommodity, Commodity>();
         Commodities[EnumCommodity.Food] = new Commodity(EnumCommodity.Food);
@@ -172,26 +166,32 @@
             case EnumGovernment.Despotism:
                 TrainSkill(EnumSkills.Intrigue);
                 TrainSkill(EnumSkills.Warfare);
+                Feats.Add(EnumFeats.CrushDissent);
                 break;
             case EnumGovernment.Feudalism:
                 TrainSkill(EnumSkills.Defense);
                 TrainSkill(EnumSkills.Trade);
+                Feats.Add(EnumFeats.FortifiedFiefs);
                 break;
             case EnumGovernment.Oligarchy:
                 TrainSkill(EnumSkills.Arts);
                 TrainSkill(EnumSkills.Industry);
+                Feats.Add(EnumFeats.InsiderTrading);
                 break;
             case EnumGovernment.Republic:
                 TrainSkill(EnumSkills.Engineering);
                 TrainSkill(EnumSkills.Politics);
+                Feats.Add(EnumFeats.PullTogether);
                 break;
             case EnumGovernment.Thaumocracy:
                 TrainSkill(EnumSkills.Folklore);
                 TrainSkill(EnumSkills.Magic);
+                Feats.Add(EnumFeats.PracticalMagic);
                 break;
             case EnumGovernment.Yeomanry:
                 TrainSkill(EnumSkills.Agriculture);
                 TrainSkill(EnumSkills.Wilderness);
+                Feats.Add(EnumFeats.MuddleThrough);
                 break;
         }
     }
@@ -382,6 +382,16 @@
         Abilities[freeChoice2].BoostAbility();
     }
 
+    public void AddSettlement(string settlementName, int posX = 0, int posY = 0, bool isCapital = false)
+    {
+        if(isCapital)
+        {
+            Hex SettlementHex = new Hex(posX, posY, Heartland);
+            Territory[SettlementHex.Key()] = SettlementHex;
+        }
+        Settlements.Add(new Settlement(settlementName, Territory[posX+":"+posY], isCapital));        
+    }
+
     public void AddLeader(Leader addedLeader)
     {
         if (addedLeader == null) throw new Exception("You must choose a leader to add.");
@@ -394,7 +404,7 @@
             if(forLeader.getInvested()) totalInvested++;
         }
 
-        if (addedLeader.getInvested() && totalInvested >= 4) throw new Exception("There is already a leader in this Role.");
+        if (addedLeader.getInvested() && totalInvested >= 4) throw new Exception("There are already 4 invested Leaders.");
 
         Leaders.Add(addedLeader);
     }
@@ -476,7 +486,7 @@
     {
         int amount = KingdomLevel + 4;
 
-        if (Feats.ContainsKey(EnumFeats.InsiderTrading))
+        if (Feats.Contains(EnumFeats.InsiderTrading))
         { amount++; }
 
         //TODO : Any reduction goes here.
@@ -486,14 +496,45 @@
 
     public int Consumption()
     {
-        return 1; //TODO : Settlement - Farmlands + etc.
+        int totalConsumption = 0;
+
+        foreach (Settlement settlement in Settlements)
+        {
+            switch(settlement.SettlementType)
+            {
+                case EnumSettlementType.Village:
+                    totalConsumption += 1;
+                    break;
+                case EnumSettlementType.Town:
+                    totalConsumption += 2;
+                    break;
+                case EnumSettlementType.City:
+                    totalConsumption += 4;
+                    break;
+                case EnumSettlementType.Metropolis:
+                    totalConsumption += 6;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("The consumption can't be calculated because this settlement type doesn't exist.");
+            }            
+        }
+        
+        foreach (Hex hex in Territory.Values)
+        {
+            if(hex.TerrainFeature == EnumTerrainFeature.Farmland)
+            {
+                totalConsumption--;
+            }
+        }
+
+        return Math.Max(totalConsumption, 0);
     }
 
     public bool EarnFame()
     {
         int FameThreshold = 3;
 
-        if(KingdomLevel >= 20)
+        if(Feats.Contains(EnumFeats.EnvyOfTheWorld))
         {
             FameThreshold++;
         }
@@ -644,8 +685,8 @@
             case 3:
                 break;
             case 4:
-                Feats[EnumFeats.ExpansionExpert] = "";
-                Feats[EnumFeats.FineLiving] = "";
+                Feats.Add(EnumFeats.ExpansionExpert);
+                Feats.Add(EnumFeats.FineLiving);
                 break;
             case 5:
                 break;
@@ -654,12 +695,13 @@
             case 7:
                 break;
             case 8:
+                Feats.Add(EnumFeats.ExperiencedLeadership);
                 break;
             case 9:
-                Feats[EnumFeats.ExpansionExpertPlus] = "";
+                Feats.Add(EnumFeats.ExpansionExpertPlus);
                 break;
             case 10:
-                Feats[EnumFeats.LifeOfLuxury] = "";
+                Feats.Add(EnumFeats.LifeOfLuxury);
                 break;
             case 11:
                 break;
@@ -672,6 +714,7 @@
             case 15:
                 break;
             case 16:
+                Feats.Add(EnumFeats.ExperiencedLeadershipPlus);
                 break;
             case 17:
                 break;
@@ -680,6 +723,7 @@
             case 19:
                 break;
             case 20:
+                Feats.Add(EnumFeats.EnvyOfTheWorld);
                 break;
             case 21:
                 throw new NotSupportedException("You're too OP, stop right there !");

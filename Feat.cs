@@ -2,10 +2,15 @@
 {
     None,
     //LevelUp abilities
-    FineLiving,
-    LifeOfLuxury,
-    ExpansionExpert,
-    ExpansionExpertPlus,
+    FineLiving, //Level 4
+    LifeOfLuxury, //Level 10
+    ExpansionExpert, //Level 4
+    ExpansionExpertPlus, //Level 9
+    ExperiencedLeadership, //Level 8
+    ExperiencedLeadershipPlus, //Level 16
+    CivicPlanning,
+    EnvyOfTheWorld,
+
     //Feats
     CivilService,
     CooperativeLeadership,

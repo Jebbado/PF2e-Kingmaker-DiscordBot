@@ -72,6 +72,8 @@
 
 public enum EnumActivityPhase
 {
+    Upkeep,
+    Commerce,
     Leadership,
     Region,
     Civic

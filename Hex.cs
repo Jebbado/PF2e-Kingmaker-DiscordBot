@@ -25,10 +25,11 @@ public class Hex
 {
     private int CoordinateX;
     private int CoordinateY;
-    private Kingdom.EnumHeartland TerrainType;
+    private EnumHeartland TerrainType;
+    public EnumTerrainFeature TerrainFeature { get; set; }
     //private bool IsReconnoitered;
 
-    public Hex(int coordinateX, int coordinateY, Kingdom.EnumHeartland terrainType)
+    public Hex(int coordinateX, int coordinateY, EnumHeartland terrainType)
     { 
         CoordinateX = coordinateX;
         CoordinateY = coordinateY;

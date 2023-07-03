@@ -37,10 +37,11 @@ public class Settlement
     private Dictionary<EnumSettlementSide, EnumSettlementSideFeature> Sides = new Dictionary<EnumSettlementSide, EnumSettlementSideFeature>(); //Might be a list of features for each side, still unclear.
     
 
-    public Settlement(string name, Hex containerHex) 
+    public Settlement(string name, Hex containerHex, bool isCapital = false) 
     {
         Name = name;
         SettlementHex = containerHex;
+        IsCapital = isCapital;
     }
 
     public void PlaceStructure(EnumStructure structure, int blockNumber, bool isUpgrade = false, int gridNumber = 1) 
