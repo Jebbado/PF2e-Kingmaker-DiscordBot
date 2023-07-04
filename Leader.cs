@@ -1,4 +1,6 @@
-﻿public enum EnumRole
+﻿using System.Data;
+
+public enum EnumLeaderRole
 {
     None,
     Ruler,
@@ -13,53 +15,49 @@
 
 public class Leader
 {
-    private string Name;
-    private string SomeKey; //Link with Discord ID to know which member is the Leader. Hypothetical futur usage.
-    private EnumRole Role;
-    private bool Invested;
-    private bool IsPlayerCharacter;
+    public string Name { get; set; }
+    public EnumLeaderRole Role { get; set; }
+    public bool IsInvested { get; set; }
+    public bool IsPlayerCharacter { get; set; }
+    public bool IsVacant { get; set; }
 
-    public Leader(string name, EnumRole role, bool invested, bool isPlayerCharacter = true)
+    public Leader(string name, EnumLeaderRole role, bool invested, bool isPlayerCharacter = true)
     {
         if (name == null || name == "") throw new Exception("Name must not be empty.");
 
-        if (role == EnumRole.None && invested) throw new Exception("A leader without a Role can't be Invested.");
+        if (role == EnumLeaderRole.None && invested) throw new Exception("A leader without a Role can't be Invested.");
 
         Name = name;
         Role = role;
-        Invested = invested;
-        SomeKey = "";
+        IsInvested = invested;
         IsPlayerCharacter = isPlayerCharacter;
-    }
+        IsVacant = false;
+    }     
 
-    public string getName()
-    { return Name; }
-    public string getSomeKey()
-    { return SomeKey; }
-    public EnumRole getRole()
-    { return Role; }
-    public bool getInvested()
-    { return Invested; }
-    
-    public static EnumAbilityScore KeyAbilityForRole(EnumRole role)
+    public static EnumAbilityScore KeyAbilityForRole(EnumLeaderRole role)
     {
         switch(role) 
         {
-            case EnumRole.Counselor:
-            case EnumRole.Magister:
+            case EnumLeaderRole.Counselor:
+            case EnumLeaderRole.Magister:
                 return EnumAbilityScore.Culture;
-            case EnumRole.Treasurer:
-            case EnumRole.Viceroy:
+            case EnumLeaderRole.Treasurer:
+            case EnumLeaderRole.Viceroy:
                 return EnumAbilityScore.Economy;
-            case EnumRole.Ruler:
-            case EnumRole.Emissary:
+            case EnumLeaderRole.Ruler:
+            case EnumLeaderRole.Emissary:
                 return EnumAbilityScore.Loyalty;
-            case EnumRole.General:
-            case EnumRole.Warden:
+            case EnumLeaderRole.General:
+            case EnumLeaderRole.Warden:
                 return EnumAbilityScore.Stability;
             default: 
                 throw new Exception("This leader's Role has no Key Ability.");
         }
+    }
+
+    public EnumAbilityScore KeyAbility()
+    {
+        return KeyAbilityForRole(Role);
     }
 
 }

@@ -76,13 +76,14 @@ public enum EnumActivityPhase
     Commerce,
     Leadership,
     Region,
-    Civic
+    Civic,
+    Warfare
 }
 
 public class Activity
 {
-    EnumSkills RequiredSkill { get; }
-    EnumActivityPhase Phase { get; }
+    public EnumSkills RequiredSkill { get; }
+    public EnumActivityPhase Phase { get; }
 
     public Activity(EnumSkills skill, EnumActivityPhase phase)
     {

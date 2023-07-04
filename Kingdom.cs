@@ -56,10 +56,10 @@ public class Kingdom
     private EnumGovernment Government;
 
     private int ExperiencePoints;
-    private int KingdomLevel;
+    public int KingdomLevel { get; private set; }
     private int PlayersLevel;
 
-    private Dictionary<EnumAbilityScore, Ability> Abilities;
+    public Dictionary<EnumAbilityScore, Ability> Abilities { get; }
 
     private int FamePoints;
     private EnumFameAspiration FameAspiration = EnumFameAspiration.None;
@@ -68,7 +68,7 @@ public class Kingdom
     private int RessourcePoints;
     private Dictionary<EnumCommodity, Commodity> Commodities;
 
-    private List<Leader> Leaders;
+    public Dictionary<EnumLeaderRole, Leader> Leaders { get; }
 
     private List<Settlement> Settlements;
 
@@ -76,11 +76,10 @@ public class Kingdom
     
     private Dictionary<EnumRuinCategory, int> RuinScore;
     private Dictionary<EnumRuinCategory, int> RuinThreshold;
-    private Dictionary<EnumRuinCategory, int> RuinItemPenalty;    
+    public Dictionary<EnumRuinCategory, int> RuinItemPenalty { get; }
+    public Dictionary<EnumSkills, EnumSkillTraining> SkillTrainings { get; }
 
-    private Dictionary<EnumSkills, EnumSkillTraining> SkillTrainings;
-
-    private List<EnumFeats> Feats;
+    public List<EnumFeats> Feats { get; }
 
     public Kingdom(string name)
     {
@@ -88,7 +87,7 @@ public class Kingdom
 
         Charter = EnumCharter.None;
         Heartland = EnumHeartland.None;
-        Government = EnumGovernment.None;        
+        Government = EnumGovernment.None;
 
         KingdomLevel = 1;
 
@@ -100,7 +99,7 @@ public class Kingdom
         Abilities[EnumAbilityScore.Loyalty] = new Ability(EnumAbilityScore.Loyalty);
         Abilities[EnumAbilityScore.Stability] = new Ability(EnumAbilityScore.Stability);
 
-        Leaders = new List<Leader>();
+        Leaders = new Dictionary<EnumLeaderRole, Leader>();
 
         Settlements = new List<Settlement>();     
 
@@ -412,24 +411,23 @@ public class Kingdom
     public void AddLeader(Leader addedLeader)
     {
         if (addedLeader == null) throw new Exception("You must choose a leader to add.");
+        
+        if (Leaders.ContainsKey(addedLeader.Role)) throw new Exception("There is already a leader in this Role.");
 
-        int totalInvested = 0;
-        foreach (Leader forLeader in Leaders) 
-        {
-            if (forLeader.getRole() == addedLeader.getRole()) throw new Exception("There is already a leader in this Role.");
+        if (addedLeader.IsInvested && InvestedLeadersCount() >= 4) throw new Exception("There are already 4 invested Leaders.");
 
-            if(forLeader.getInvested()) totalInvested++;
-        }
-
-        if (addedLeader.getInvested() && totalInvested >= 4) throw new Exception("There are already 4 invested Leaders.");
-
-        Leaders.Add(addedLeader);
+        Leaders[addedLeader.Role] = addedLeader;
     }
 
     public void setPlayersLevel(int level)
-    { this.PlayersLevel = level; }
+    { 
+        this.PlayersLevel = level; 
+    }
 
-    public void RemoveLeader(Leader removedLeader) { Leaders.Remove(removedLeader); } //TODO : Test the input. I guess I require an ID.
+    public void RemoveLeader(EnumLeaderRole removedLeader) 
+    { 
+        Leaders.Remove(removedLeader); 
+    }
 
     public int ControlDC()
     {
@@ -462,6 +460,11 @@ public class Kingdom
 
         returnedDC += KingdomSizeControlDCModifier();
 
+        if (Leaders[EnumLeaderRole.Ruler].IsVacant && INeedTurnsHere)
+        {
+            returnedDC += 2;
+        }
+
         return returnedDC;
     }
 
@@ -493,11 +496,7 @@ public class Kingdom
         else if (KingdomSize() > 100)
         { return 4; }
         else { throw new ArgumentOutOfRangeException(); }
-    }
-
-    
-
-   
+    }  
 
     public int RessourceDiceAmount()
     {
@@ -547,7 +546,7 @@ public class Kingdom
         return Math.Max(totalConsumption, 0);
     }
 
-    public bool EarnFame()
+    public void EarnFame()
     {
         int FameThreshold = 3;
 
@@ -558,11 +557,10 @@ public class Kingdom
 
         if (FamePoints >= FameThreshold)
         {
-            return false;
+            return;
         }
 
-        FamePoints += 1;
-        return true;        
+        FamePoints += 1;        
     }
 
     public EnumCheckResult KingdomCheck(int DC, int modifier = 0) 
@@ -572,34 +570,7 @@ public class Kingdom
         if(returnedResult == EnumCheckResult.CritSuccess) { EarnFame(); }
 
         return returnedResult;
-    }
-
-    public EnumCheckResult UseSkill(EnumSkills usedSkill)
-    {
-        int totalModifier = 0;
-        int proficiencyBonus = 0;
-        int statusBonus = 0;
-        
-        if (SkillTrainings.ContainsKey(usedSkill))
-        {
-            proficiencyBonus += Skill.TrainingBonus(SkillTrainings[usedSkill]) + KingdomLevel;
-        }
-        
-        if (SkillHasStatusBonusFromInvestedLeader(usedSkill))
-        {
-            int bonusFromInvested = 1;
-            if (KingdomLevel >= 8) bonusFromInvested = 2;
-            if (KingdomLevel >= 16) bonusFromInvested = 3;
-            statusBonus = Math.Max(statusBonus, bonusFromInvested);
-        }
-
-        totalModifier += Abilities[Skill.SkillList()[usedSkill].KeyAbility].Modifier();
-        totalModifier += proficiencyBonus;
-        totalModifier += statusBonus;
-        totalModifier -= RuinItemPenalty[RuinCategoryByAbility(Skill.SkillList()[usedSkill].KeyAbility)];
-
-        return KingdomCheck(ControlDC(), totalModifier);
-    }
+    }    
     
     public void TrainSkill(EnumSkills enumSkill, EnumSkillTraining skillTraining = EnumSkillTraining.Trained)
     {
@@ -614,9 +585,9 @@ public class Kingdom
 
     public bool SkillHasStatusBonusFromInvestedLeader(EnumSkills enumSkill)
     {
-        foreach (Leader forLeader in Leaders)
+        foreach (Leader forLeader in Leaders.Values)
         {
-            if(forLeader.getInvested() && Leader.KeyAbilityForRole(forLeader.getRole()) == Skill.SkillList()[enumSkill].KeyAbility)
+            if(forLeader.IsInvested && forLeader.KeyAbility() == Skill.SkillList()[enumSkill].KeyAbility)
             {
                 return true;
             }
@@ -656,7 +627,6 @@ public class Kingdom
             RuinScore[ruinCategory] -= RuinThreshold[ruinCategory];
             RuinItemPenalty[ruinCategory] += 1;
         }
-
     }
 
     public static EnumRuinCategory RuinCategoryByAbility(EnumAbilityScore enumAbility)
@@ -671,7 +641,7 @@ public class Kingdom
                 return EnumRuinCategory.Strife;
             case EnumAbilityScore.Stability:
                 return EnumRuinCategory.Decay;
-            default: throw new NotImplementedException("This ability score does'nt exist.");
+            default: throw new NotImplementedException("This ability score doesn't exist.");
         }
     }
 
@@ -751,9 +721,9 @@ public class Kingdom
     public int InvestedLeadersCount() 
     {
         int amount = 0;
-        foreach (Leader forLeader in Leaders)
+        foreach (Leader forLeader in Leaders.Values)
         {
-            if(forLeader.getInvested())
+            if(forLeader.IsInvested)
             {
                 amount++;
             }
@@ -772,6 +742,16 @@ public class Kingdom
         }
 
         throw new NotSupportedException("There is no capital. Something went wrong.");
+    }
+
+    public void ResetFame()
+    {
+        FamePoints = 1;
+    }
+
+    internal void MakeLeaderVacant(EnumLeaderRole role)
+    {
+        Leaders[role].IsVacant = true;
     }
 }
 

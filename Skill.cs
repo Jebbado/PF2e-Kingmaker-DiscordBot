@@ -30,12 +30,8 @@ public enum EnumSkillTraining
 
 public class Skill
 {
-    public EnumSkills SkillName
-    { get; set; }
-    public EnumAbilityScore KeyAbility
-    {
-        get; set;
-    }
+    public EnumSkills SkillName { get; set; }
+    public EnumAbilityScore KeyAbility { get; set; }
 
     public static Dictionary<EnumSkills, Skill> SkillList()
     {
