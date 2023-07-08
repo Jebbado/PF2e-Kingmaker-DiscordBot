@@ -47,6 +47,24 @@ public enum EnumFameAspiration
     Infamy
 }
 
+public enum EnumXPMilestone
+{
+    FirstLandmark,  //40XP
+    FirstRefuge,    //40XP
+    FirstVillage,   //40XP
+    KingdomSize10,  //40XP
+    FirstDiplomatic,//60XP
+    FirstTown,      //60XP
+    AllLeaders,     //60XP
+    KingdomSize25,  //60XP
+    FirstTrade,     //80XP
+    FirstCity,      //80XP
+    KingdomSize50,  //80XP
+    Spend100RP,     //80XP
+    FirstMetropolis,//120XP
+    KingdomSize100  //120XP
+}
+
 public class Kingdom
 {
     private string KingdomName;    
@@ -80,6 +98,10 @@ public class Kingdom
     public Dictionary<EnumSkills, EnumSkillTraining> SkillTrainings { get; }
 
     public List<EnumFeats> Feats { get; }
+    public List<EnumXPMilestone> Milestones { get; }
+
+    public int ThisTurn = 0;
+    public Dictionary<int, Turn> Turns = new Dictionary<int, Turn>();
 
     public Kingdom(string name)
     {
@@ -110,6 +132,7 @@ public class Kingdom
         RuinItemPenalty = new Dictionary<EnumRuinCategory, int>();
 
         Feats = new List<EnumFeats>();
+        Milestones = new List<EnumXPMilestone>();
 
         Commodities = new Dictionary<EnumCommodity, Commodity>();
         Commodities[EnumCommodity.Food] = new Commodity(EnumCommodity.Food);
@@ -117,6 +140,8 @@ public class Kingdom
         Commodities[EnumCommodity.Stone] = new Commodity(EnumCommodity.Stone);
         Commodities[EnumCommodity.Ore] = new Commodity(EnumCommodity.Ore);
         Commodities[EnumCommodity.Luxuries] = new Commodity(EnumCommodity.Luxuries);
+
+        Turns[ThisTurn] = new Turn(ThisTurn, EnumPhase.Creation, EnumStep.ChooseCharter);
     }  
     
 
@@ -127,6 +152,9 @@ public class Kingdom
 
     public void AssignCharter(EnumCharter charter)
     {
+        if (CurrentTurn().Phase != EnumPhase.Creation) { throw new Exception("You can't change your Charter after Kingdom creation."); }
+        if (CurrentTurn().Step != EnumStep.ChooseCharter) { throw new Exception("You're not at the 'Select a Charter' step right now."); }
+
         if (Charter != EnumCharter.None)
         {
             throw new Exception("Charter already chosen. You can't change your charter.");
@@ -138,10 +166,15 @@ public class Kingdom
         }
 
         Charter = charter;
+
+        CurrentTurn().Step = EnumStep.ChooseHeartland;
     }
 
     public void AssignHeartland(EnumHeartland heartland)
     {
+        if (CurrentTurn().Phase != EnumPhase.Creation) { throw new Exception("You can't change your Heartland after Kingdom creation."); }
+        if (CurrentTurn().Step != EnumStep.ChooseHeartland) { throw new Exception("You're not at the 'Choose a Heartland' step right now."); }
+
         if (Heartland != EnumHeartland.None)
         {
             throw new Exception("Heartland already chosen. You can't change your heartland.");
@@ -153,10 +186,14 @@ public class Kingdom
         }
 
         Heartland = heartland;
+        CurrentTurn().Step = EnumStep.ChooseGovernment;
     }
 
     public void AssignGovernment(EnumGovernment government)
     {
+        if (CurrentTurn().Phase != EnumPhase.Creation) { throw new Exception("You can't change Government after Kingdom creation."); }
+        if (CurrentTurn().Step != EnumStep.ChooseGovernment) { throw new Exception("You're not at the 'Choose a Government' step right now."); }
+
         if (Government != EnumGovernment.None)
         {
             throw new Exception("Government already chosen. You can't change your government.");
@@ -202,6 +239,7 @@ public class Kingdom
                 Feats.Add(EnumFeats.MuddleThrough);
                 break;
         }
+        CurrentTurn().Step = EnumStep.FinalizeAbilityScores;
     }
 
     public void AssignFirstLeaderSkill(EnumSkills addedSkill)
@@ -243,6 +281,9 @@ public class Kingdom
     public void FinalizeAbilityScore(EnumAbilityScore charterChoice, EnumAbilityScore governmentChoice,
                                         EnumAbilityScore freeChoice1, EnumAbilityScore freeChoice2)
     {
+        if (CurrentTurn().Phase != EnumPhase.Creation) { throw new Exception("You can't change Ability Scores after Kingdom creation."); }
+        if (CurrentTurn().Step != EnumStep.FinalizeAbilityScores) { throw new Exception("You're not at the 'Finalize Ability Score' step right now."); }
+        
         switch (Charter)
         {
             case EnumCharter.Conquest:
@@ -388,14 +429,21 @@ public class Kingdom
         }
         Abilities[freeChoice1].BoostAbility();
         Abilities[freeChoice2].BoostAbility();
+
+        CurrentTurn().Step = EnumStep.ChooseLeaders;
     }
 
     public void ChooseFame(EnumFameAspiration fame)
     {
-        if(FameAspiration != EnumFameAspiration.None) { throw new Exception("You can't change your Fame Aspiration after Kingdom Creation."); }
+        if (CurrentTurn().Phase != EnumPhase.Creation) { throw new Exception("You're not in the 'Kingdom Creation' phase."); }
+        if (CurrentTurn().Step != EnumStep.ChooseFameInfamy) { throw new Exception("You're not at the 'Fame or Infamy ?' step."); }
+
+        if (FameAspiration != EnumFameAspiration.None) { throw new Exception("You can't change your Fame Aspiration after Kingdom Creation."); }
         if (fame == EnumFameAspiration.None) { throw new Exception("You must choose a valid Fame Aspiration."); }
 
         FameAspiration = fame;
+
+        EndTurn();
     }
 
     public void AddSettlement(string settlementName, int posX = 0, int posY = 0, bool isCapital = false)
@@ -408,15 +456,40 @@ public class Kingdom
         Settlements.Add(new Settlement(settlementName, Territory[posX+":"+posY], isCapital));        
     }
 
-    public void AddLeader(Leader addedLeader)
+    public void CreateCapital(string name, EnumStructure initialStructure = EnumStructure.None)
     {
-        if (addedLeader == null) throw new Exception("You must choose a leader to add.");
+        if (CurrentTurn().Phase != EnumPhase.Creation) { throw new Exception("You're not in the 'Kingdom Creation' phase."); }
+        if (CurrentTurn().Step != EnumStep.FirstVillage) { throw new Exception("You're not at the 'Forst Village' step."); }
+
+        AddSettlement(name, 0, 0, true);
+        if (initialStructure != EnumStructure.None)
+        {
+            CapitalSettlement().PlaceStructure(initialStructure, 1);
+        }
+
+        CurrentTurn().Step = EnumStep.ChooseFameInfamy;
+    }
+
+    public void AddLeader(string name, EnumLeaderRole role, bool invested, bool isPC)
+    {
+        if (CurrentTurn().Phase != EnumPhase.Creation) { throw new Exception("You can't add Leaders after Kingdom creation. You should use the 'New Leadership' Activity."); }
+        if (CurrentTurn().Step != EnumStep.ChooseLeaders) { throw new Exception("You're not at the 'Choose a Government' step right now."); }        
         
-        if (Leaders.ContainsKey(addedLeader.Role)) throw new Exception("There is already a leader in this Role.");
+        if (Leaders.ContainsKey(role)) throw new Exception("There is already a leader in this Role.");
 
-        if (addedLeader.IsInvested && InvestedLeadersCount() >= 4) throw new Exception("There are already 4 invested Leaders.");
+        if (invested && InvestedLeadersCount() >= 4) throw new Exception("There are already 4 invested Leaders.");
 
-        Leaders[addedLeader.Role] = addedLeader;
+        Leaders[role] = new Leader(name, role, invested, isPC);
+    }
+
+    public void EndLeaderStep()
+    {
+        if (CurrentTurn().Phase != EnumPhase.Creation) { throw new Exception("You're not in the 'Kingdom Creation' phase."); }
+        if (CurrentTurn().Step != EnumStep.ChooseLeaders) { throw new Exception("You're not at the 'Choose Leaders' step."); }
+
+        if (InvestedLeadersCount() < 4) { throw new Exception("You must have 4 Invested Leaders before ending"); }
+
+        CurrentTurn().Step = EnumStep.FirstVillage;
     }
 
     public void setPlayersLevel(int level)
@@ -444,7 +517,7 @@ public class Kingdom
             case 7: returnedDC = 23; break;
             case 8: returnedDC = 24; break;
             case 9: returnedDC = 26; break;
-            case 10: returnedDC = 27; break;                   
+            case 10: returnedDC = 27; break;
             case 11: returnedDC = 28; break;
             case 12: returnedDC = 30; break;
             case 13: returnedDC = 31; break;
@@ -460,7 +533,7 @@ public class Kingdom
 
         returnedDC += KingdomSizeControlDCModifier();
 
-        if (Leaders[EnumLeaderRole.Ruler].IsVacant && INeedTurnsHere)
+        if (Leaders[EnumLeaderRole.Ruler].IsVacant && ! CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Ruler))
         {
             returnedDC += 2;
         }
@@ -749,9 +822,123 @@ public class Kingdom
         FamePoints = 1;
     }
 
-    internal void MakeLeaderVacant(EnumLeaderRole role)
+    public void MakeLeaderVacant(EnumLeaderRole role, bool sacrificeActivity)
     {
+        if (CurrentTurn().Phase != EnumPhase.Upkeep) throw new Exception("You're not in the 'Upkeep' phase.");
+        if (CurrentTurn().Step != EnumStep.AssignLeadership) throw new Exception("You're not at the 'Assign Leadership Roles' step.");
+
+        //This means this step is finished
+        if (role == EnumLeaderRole.None)
+        {
+            CurrentTurn().Step = EnumStep.AssignLeadership;
+            return;
+        }
+
         Leaders[role].IsVacant = true;
+
+        if (sacrificeActivity)
+        {
+            CurrentTurn().LeaderGaveUpActivity.Add(role);
+        }
+    }
+
+    public Turn CurrentTurn() 
+    {
+        return Turns[ThisTurn];
+    }
+
+    public void EndTurn()
+    {
+        ThisTurn++;
+        CurrentTurn().Phase = EnumPhase.Upkeep;
+        CurrentTurn().Step = EnumStep.AssignLeadership;
+        ResetFame();
+    }
+
+    public EnumCheckResult UseActivity(EnumActivity usedActivity)
+    {
+        EnumSkills usedSkill = Activity.ActivityList()[usedActivity].RequiredSkill;
+
+        int totalModifier = Abilities[Skill.SkillList()[usedSkill].KeyAbility].Modifier();
+
+        //Skill Training - Proficency Bonus
+        if (SkillTrainings.ContainsKey(usedSkill))
+        {
+            totalModifier += Skill.TrainingBonus(SkillTrainings[usedSkill]) + KingdomLevel;
+        }
+
+        BonusManager BonusList = new BonusManager();
+
+        //Invested leaders
+        if (SkillHasStatusBonusFromInvestedLeader(usedSkill))
+        {
+            int bonusFromInvested = 1;
+            if (Feats.Contains(EnumFeats.ExperiencedLeadership)) bonusFromInvested = 2;
+            if (Feats.Contains(EnumFeats.ExperiencedLeadershipPlus)) bonusFromInvested = 3;
+
+            BonusList.AddBonus(EnumBonusType.StatusBonus, bonusFromInvested);
+        }
+
+        //Vacancy Penalities
+        if (Leaders[EnumLeaderRole.Ruler].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Ruler) == false)
+        {
+            BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
+        }
+        if (Leaders[EnumLeaderRole.Counselor].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Counselor) == false)
+        {
+            if (Skill.SkillList()[usedSkill].KeyAbility == EnumAbilityScore.Culture)
+            {
+                BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
+            }
+        }
+        if (Leaders[EnumLeaderRole.Emissary].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Emissary) == false)
+        {
+            if (Skill.SkillList()[usedSkill].KeyAbility == EnumAbilityScore.Loyalty)
+            {
+                BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
+            }
+        }
+        if (Leaders[EnumLeaderRole.Treasurer].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Treasurer) == false)
+        {
+            if (Skill.SkillList()[usedSkill].KeyAbility == EnumAbilityScore.Economy)
+            {
+                BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
+            }
+        }
+        if (Leaders[EnumLeaderRole.Viceroy].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Viceroy) == false)
+        {
+            if (Skill.SkillList()[usedSkill].KeyAbility == EnumAbilityScore.Stability)
+            {
+                BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
+            }
+        }
+        if (Leaders[EnumLeaderRole.Warden].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Warden) == false)
+        {
+            if (Activity.ActivityList()[usedActivity].Phase == EnumActivityPhase.Region)
+            {
+                BonusList.AddBonus(EnumBonusType.UntypedPenalty, -4);
+            }
+        }
+        if (Leaders[EnumLeaderRole.General].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.General) == false)
+        {
+            if (Activity.ActivityList()[usedActivity].Phase == EnumActivityPhase.Warfare)
+            {
+                BonusList.AddBonus(EnumBonusType.UntypedPenalty, -4);
+            }
+        }
+        if (Leaders[EnumLeaderRole.Magister].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Magister) == false)
+        {
+            if (Activity.ActivityList()[usedActivity].Phase == EnumActivityPhase.Warfare)
+            {
+                BonusList.AddBonus(EnumBonusType.UntypedPenalty, -4);
+            }
+        }
+
+        BonusList.AddBonus(EnumBonusType.ItemPenalty, RuinItemPenalty[RuinCategoryByAbility(Skill.SkillList()[usedSkill].KeyAbility)]);
+        
+        totalModifier += BonusList.TotalBonus();
+
+        return KingdomCheck(ControlDC(), totalModifier);
     }
 }
 

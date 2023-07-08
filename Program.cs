@@ -11,8 +11,8 @@
         Valancie.AssignCharter(EnumCharter.Exploration);
         Valancie.AssignHeartland(EnumHeartland.Plain);
         Valancie.AssignGovernment(EnumGovernment.Feudalism);
-        Valancie.AddLeader(new Leader("Sébaste Larivière", EnumLeaderRole.Ruler, true));
-        Valancie.AddLeader(new Leader("Jacques Létourneau", EnumLeaderRole.None, false));
+        Valancie.AddLeader("Sébaste Larivière", EnumLeaderRole.Ruler, true, true);
+        Valancie.AddLeader("Jacques Létourneau", EnumLeaderRole.None, false, false);
 
         Valancie.TrainSkill(EnumSkills.Agriculture);
         //Console.WriteLine(Valancie.SkillName.ToString());
