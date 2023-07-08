@@ -1,16 +1,20 @@
 ﻿
 public enum EnumPhase
 {
+    None,
     Creation,
     Upkeep,
     Commerce,
     Activity,
     Event,
-    Warfare
+    Warfare,
+    GameOver // :(
 }
 
 public enum EnumStep
 {
+    None,
+
     //Creation
     ChooseCharter,
     ChooseHeartland,
@@ -28,6 +32,7 @@ public enum EnumStep
 
     //Commerce
     CollectTaxes,
+    CollectTaxesRuin,
     ApproveExpenses,
     TapCommodities,
     ManageTradeAgreements,
@@ -42,6 +47,13 @@ public enum EnumStep
     EventResolution,
     ApplyXP,
     LevelUp
+}
+
+public enum EnumPausedReason
+{
+    None,
+    RuinFromNoRP,
+    RuinFromRefuge
 }
 
 public class Game
@@ -79,4 +91,33 @@ public class Turn
     }
 
     public List<EnumLeaderRole> LeaderGaveUpActivity { get; set; } //To counteract Vacancy Penality.
+    public int UpkeepUnrestRuinPoints;
+    public bool UpkeepUnrestLostHex;
+    public bool CollectedTaxes;
+    public int CollectedTaxesBonus;
+    public EnumPhase PausedPhase = EnumPhase.None;
+    public EnumStep PausedStep = EnumStep.None;
+    public EnumPausedReason PausedReason = EnumPausedReason.None;
+    public bool WentWithoutHex;
+    public bool CapturedHex;
+    public bool CapturedLandmark;
+    public bool CapturedRefuge;
+
+    public void Pause(EnumPausedReason pausedReason)
+    {
+        PausedPhase = Phase;
+        Phase = EnumPhase.None;
+        PausedStep = Step;
+        Step = EnumStep.None;
+        PausedReason = pausedReason;
+    }
+
+    public void Unpause()
+    {
+        Phase = PausedPhase;
+        PausedPhase = EnumPhase.None;
+        Step = PausedStep;
+        PausedStep = EnumStep.None;
+        PausedReason = EnumPausedReason.None;
+    }
 }

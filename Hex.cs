@@ -1,24 +1,18 @@
-﻿public enum EnumTerrainType
-{
-    None,
-    TEST
-}
-
+﻿
 public enum EnumTerrainFeature
 {
     None,
     Bridge,
     Farmland,
-    Freeholf,
+    Freehold,
     Landmark,
     Refuge,
-    ResourceLumber,
-    ResourceOre,
-    ResourceStone,
+    Resource,
     Ruins,
     Settlement,
     Structure,
-    WorkSite
+    WorkSite,
+    RessourceWorksite
 }
 
 public class Hex
@@ -27,13 +21,19 @@ public class Hex
     private int CoordinateY;
     private EnumHeartland TerrainType;
     public EnumTerrainFeature TerrainFeature { get; set; }
+    public EnumCommodity Ressource { get; }
     //private bool IsReconnoitered;
+    public bool InTerritory { get; set; }
 
-    public Hex(int coordinateX, int coordinateY, EnumHeartland terrainType)
+    public Hex(int coordinateX, int coordinateY, EnumHeartland terrainType, EnumTerrainFeature feature = EnumTerrainFeature.None, EnumCommodity ressource = EnumCommodity.None)
     { 
         CoordinateX = coordinateX;
         CoordinateY = coordinateY;
         TerrainType = terrainType;
+        Ressource = EnumCommodity.None;
+        TerrainFeature = feature;
+        Ressource = ressource;
+        InTerritory = true;
         //IsReconnoitered = false;
     }
 

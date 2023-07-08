@@ -9,7 +9,7 @@ public enum EnumCheckResult
     CritFailure
 }
 
-public class Utility
+public class Check
 {
             
 
@@ -22,65 +22,78 @@ public class Utility
         if (totalResult >= DC)
         {
             returnedResult = EnumCheckResult.Success;
-            if (totalResult >= DC + 10) { returnedResult = EnumCheckResult.CritSuccess; }
+            if (totalResult >= DC + 10) 
+            {
+                returnedResult = ImproveCheckResult(returnedResult);
+            }
         }
         else
         {
             returnedResult = EnumCheckResult.Failure;
-            if (totalResult <= DC - 10) { returnedResult = EnumCheckResult.CritFailure; }
+            if (totalResult <= DC - 10) 
+            {
+                returnedResult = WorsenCheckResult(returnedResult);
+            }
         }
 
         if (diceResult == 20)
         {
-            switch (returnedResult)
-            {
-                case EnumCheckResult.CritFailure:
-                    returnedResult = EnumCheckResult.Failure;
-                    break;
-                case EnumCheckResult.Failure:
-                    returnedResult = EnumCheckResult.Success;
-                    break;
-                case EnumCheckResult.Success:
-                    returnedResult = EnumCheckResult.CritSuccess;
-                    break;
-                case EnumCheckResult.CritSuccess:
-                    returnedResult = EnumCheckResult.CritSuccess;
-                    break;
-            }
+            returnedResult = ImproveCheckResult(returnedResult);
         }
             
         if (diceResult == 1)
         {
-                switch (returnedResult)
-                {
-                    case EnumCheckResult.CritFailure:
-                        returnedResult = EnumCheckResult.CritFailure;
-                        break;
-                    case EnumCheckResult.Failure:
-                        returnedResult = EnumCheckResult.CritFailure;
-                        break;
-                    case EnumCheckResult.Success:
-                        returnedResult = EnumCheckResult.Failure;
-                        break;
-                    case EnumCheckResult.CritSuccess:
-                        returnedResult = EnumCheckResult.Success;
-                        break;
-                }
-            }
+            returnedResult = WorsenCheckResult(returnedResult);
+        }
          
         return returnedResult;
             
     }
 
-    public static EnumCheckResult MakeFlatCheck(int DC)
+    public static bool MakeFlatCheck(int DC)
     {
-        return MakeCheck(DC, 0);
+        EnumCheckResult result = MakeCheck(DC, 0);
+        return (result == EnumCheckResult.Success || result == EnumCheckResult.CritSuccess);
+        
+    }
+
+    public static EnumCheckResult WorsenCheckResult(EnumCheckResult checkResult)
+    {
+        switch(checkResult)
+        {
+            case EnumCheckResult.CritSuccess:
+                return EnumCheckResult.Success;
+            case EnumCheckResult.Success:
+                return EnumCheckResult.Failure;
+            case EnumCheckResult.Failure:
+                return EnumCheckResult.CritFailure;
+            case EnumCheckResult.CritFailure:
+                return EnumCheckResult.CritFailure;
+            default: throw new NotImplementedException("Unknown check result. Can't worsen it.");
+
+        }
+    }
+
+    public static EnumCheckResult ImproveCheckResult(EnumCheckResult checkResult)
+    {
+        switch (checkResult)
+        {
+            case EnumCheckResult.CritSuccess:
+                return EnumCheckResult.CritSuccess;
+            case EnumCheckResult.Success:
+                return EnumCheckResult.CritSuccess;
+            case EnumCheckResult.Failure:
+                return EnumCheckResult.Success;
+            case EnumCheckResult.CritFailure:
+                return EnumCheckResult.Failure;
+            default: throw new NotImplementedException("Unknown check result. Can't improve it.");
+        }
     }
 }
 
 public class DiceRoller
 {
-    private static Random random = new Random();
+    private static Random random = new Random(); //TODO : Verify it's the good way to create a good random.
 
     public static int RollDice(int numberOfDice, int numberOfSides)
     {

@@ -70,34 +70,28 @@
     TradeCommodities
 }
 
-public enum EnumActivityPhase
-{
-    Upkeep,
-    Commerce,
-    Leadership,
-    Region,
-    Civic,
-    Warfare
-}
-
 public class Activity
 {
+    public EnumActivity ActivityName { get; }
     public EnumSkills RequiredSkill { get; }
-    public EnumActivityPhase Phase { get; }
+    public EnumPhase Phase { get; }
+    public EnumStep Step { get; }
 
-    public Activity(EnumSkills skill, EnumActivityPhase phase)
+    public Activity(EnumActivity activity, EnumSkills skill, EnumPhase phase, EnumStep step)
     {
+        ActivityName = activity;
         RequiredSkill = skill;
         Phase = phase;
+        Step = step;
     }
 
     public static Dictionary<EnumActivity, Activity> ActivityList()
     {
         Dictionary<EnumActivity, Activity> returnedList = new Dictionary<EnumActivity, Activity>();
 
-        returnedList[EnumActivity.AbandonHexExploration] = new Activity(EnumSkills.Exploration, EnumActivityPhase.Region);
-        returnedList[EnumActivity.AbandonHexWilderness] = new Activity(EnumSkills.Wilderness, EnumActivityPhase.Region);
-        returnedList[EnumActivity.BuildRoads] = new Activity(EnumSkills.Engineering, EnumActivityPhase.Region);
+        returnedList[EnumActivity.AbandonHexExploration]    = new Activity(EnumActivity.AbandonHexExploration, EnumSkills.Exploration, EnumPhase.Activity, EnumStep.Civic);
+        returnedList[EnumActivity.AbandonHexWilderness]     = new Activity(EnumActivity.AbandonHexWilderness, EnumSkills.Wilderness, EnumPhase.Activity, EnumStep.Civic);
+        returnedList[EnumActivity.BuildRoads]               = new Activity(EnumActivity.BuildRoads, EnumSkills.Engineering, EnumPhase.Activity, EnumStep.Region);
         //returnedList[EnumActivity.CapitalInvestment] = new Activity(EnumSkills.Exploration, EnumActivityPhase.Region);
         //returnedList[EnumActivity.CelebrateHoliday] = new Activity(EnumSkills.Exploration, EnumActivityPhase.Region);
         //returnedList[EnumActivity.ClaimHexExploration] = new Activity(EnumSkills.Exploration, EnumActivityPhase.Region);
