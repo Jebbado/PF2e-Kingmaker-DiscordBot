@@ -52,8 +52,9 @@ public enum EnumStep
 public enum EnumPausedReason
 {
     None,
-    RuinFromNoRP,
-    RuinFromRefuge
+    RuinDown,
+    RuinUp,
+    ChoiceFromManageTrade
 }
 
 public class Game
@@ -95,14 +96,28 @@ public class Turn
     public bool UpkeepUnrestLostHex;
     public bool CollectedTaxes;
     public int CollectedTaxesBonus;
-    public EnumPhase PausedPhase = EnumPhase.None;
-    public EnumStep PausedStep = EnumStep.None;
-    public EnumPausedReason PausedReason = EnumPausedReason.None;
     public bool WentWithoutHex;
     public bool CapturedHex;
     public bool CapturedLandmark;
     public bool CapturedRefuge;
+    public int ImprovedLifestyleBonus;
+    public int ImprovedLifestyleMalus;
+    public bool TapTreasurySuccessMalus;
+    public bool TapTreasuryFailureMalus;
+    public bool TradedCommodity;
+    public int NextTurnBonusDice;
+    public int NextTurnBonusRP;
+    public int NextTurnBonusCommodity;
+    public int NextTurnBonusCommodityMaxLuxury;
+    public bool ManagedTradeAgreement;
+    public int ManagedTradeAgreementAmount;
+    public bool CritFailedManagedTradeAgreement;
 
+
+
+    public EnumPhase PausedPhase = EnumPhase.None;
+    public EnumStep PausedStep = EnumStep.None;
+    public EnumPausedReason PausedReason = EnumPausedReason.None;
     public void Pause(EnumPausedReason pausedReason)
     {
         PausedPhase = Phase;

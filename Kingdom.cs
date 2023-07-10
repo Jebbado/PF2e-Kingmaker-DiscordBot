@@ -104,6 +104,7 @@ public class Kingdom
     public Dictionary<int, Turn> Turns = new Dictionary<int, Turn>();
 
     private bool InAnarchy = false;
+    private bool TreasuryTapped = false;
 
     public Kingdom(string name)
     {
@@ -467,6 +468,13 @@ public class Kingdom
             Hex SettlementHex = new Hex(posX, posY, Heartland);
             Territory()[SettlementHex.Key()] = SettlementHex;
         }
+
+        if(Settlements.Count == 0)
+        {
+            Milestones.Add(EnumXPMilestone.FirstVillage);
+            AddXP(40);
+        }
+
         Settlements.Add(new Settlement(settlementName, Territory()[posX+":"+posY], isCapital));        
     }
 
@@ -890,10 +898,16 @@ public class Kingdom
             return;
         }
 
-        ThisTurn++;
-        CurrentTurn().Phase = EnumPhase.Upkeep;
-        CurrentTurn().Step = EnumStep.AssignLeadership;
-        ResetFame();
+        if(ExperiencePoints >= 1000)
+        {
+            LevelUp();
+        }
+        else
+        {
+            ThisTurn++;
+            Turns[ThisTurn] = new Turn(ThisTurn);
+            ResetFame();
+        }
     }
 
     public bool IsGameOver()
@@ -923,7 +937,7 @@ public class Kingdom
         return false;
     }
 
-    public EnumCheckResult UseActivity(EnumActivity usedActivityParam)
+    public EnumCheckResult UseActivity(EnumActivity usedActivityParam, bool thatVerySpecificBoolForTrade = false, int DCModifier = 0)
     {
         Activity usedActivity = Activity.ActivityList()[usedActivityParam];
         Skill usedSkill = Skill.SkillList()[usedActivity.RequiredSkill];
@@ -1025,13 +1039,33 @@ public class Kingdom
         BonusList.AddBonus(EnumBonusType.ItemPenalty, RuinItemPenalty[RuinCategoryByAbility(usedSkill.KeyAbility)]);
         
         //Collect Taxes Bonus
-        if(usedSkill.KeyAbility == EnumAbilityScore.Economy && CurrentTurn().CollectedTaxesBonus > 0)
+        if(CurrentTurn().CollectedTaxesBonus > 0 && usedSkill.KeyAbility == EnumAbilityScore.Economy)
         {
             BonusList.AddBonus(EnumBonusType.CircumstanceBonus, 2);
         }
 
+        //Improve Lifestyle
+        if(CurrentTurn().ImprovedLifestyleBonus != 0 && usedSkill.KeyAbility == EnumAbilityScore.Culture)
+        {
+            BonusList.AddBonus(EnumBonusType.CircumstanceBonus, CurrentTurn().ImprovedLifestyleBonus);
+        }
+        if (CurrentTurn().ImprovedLifestyleMalus != 0 && usedSkill.KeyAbility == EnumAbilityScore.Economy)
+        {
+            BonusList.AddBonus(EnumBonusType.CircumstanceBonus, CurrentTurn().ImprovedLifestyleMalus);
+        }
+
+        //Tap treasury
+        if (CurrentTurn().TapTreasurySuccessMalus && usedSkill.KeyAbility == EnumAbilityScore.Economy)
+        {
+            BonusList.AddBonus(EnumBonusType.CircumstanceBonus, CurrentTurn().ImprovedLifestyleBonus);
+        }
+        if (CurrentTurn().TapTreasuryFailureMalus && (usedSkill.KeyAbility == EnumAbilityScore.Economy || usedSkill.KeyAbility == EnumAbilityScore.Loyalty))
+        {
+            BonusList.AddBonus(EnumBonusType.CircumstanceBonus, CurrentTurn().ImprovedLifestyleMalus);
+        }
+
         //Captured Landmark Bonus
-        if(CurrentTurn().CapturedLandmark || LastTurn().CapturedLandmark)
+        if (CurrentTurn().CapturedLandmark || LastTurn().CapturedLandmark)
         {
             if(usedSkill.KeyAbility == EnumAbilityScore.Economy || usedSkill.KeyAbility == EnumAbilityScore.Culture)
             {
@@ -1048,10 +1082,16 @@ public class Kingdom
             }
         }
 
+        //thatVerySpecificBoolForTrade
+        if(thatVerySpecificBoolForTrade)
+        {
+            BonusList.AddBonus(EnumBonusType.CircumstanceBonus, 1);
+        }
+
 
         totalModifier += BonusList.TotalBonus();
 
-        return KingdomCheck(ControlDC(), totalModifier);
+        return KingdomCheck(ControlDC() + DCModifier, totalModifier);
     }
 
     public void AdjustUnrest()
@@ -1143,7 +1183,7 @@ public class Kingdom
         //Captured a Refuge
         if (hex.TerrainFeature == EnumTerrainFeature.Refuge)
         {
-            CurrentTurn().Pause(EnumPausedReason.RuinFromRefuge);
+            CurrentTurn().Pause(EnumPausedReason.RuinDown);
             CurrentTurn().CapturedRefuge = true;
             if (!Milestones.Contains(EnumXPMilestone.FirstRefuge))
             {
@@ -1327,22 +1367,205 @@ public class Kingdom
         CurrentTurn().Step = EnumStep.ApproveExpenses;
     }
 
-    public void ApproveExpenses(int choice)
+    public void ImproveLifestyle()
     {
         if (CurrentTurn().Phase != EnumPhase.Commerce) { throw new Exception("You're not in the 'Commerce' Phase."); }
         if (CurrentTurn().Step != EnumStep.ApproveExpenses) { throw new Exception("You're not in the 'Approve Expenses' Step."); }
 
+        EnumCheckResult result = UseActivity(EnumActivity.ImproveLifestyle);
+        switch (result)
+        {
+            case EnumCheckResult.CritSuccess:
+                CurrentTurn().ImprovedLifestyleBonus = 2;
+                break;
+            case EnumCheckResult.Success:
+                CurrentTurn().ImprovedLifestyleBonus = 1;
+                break;
+            case EnumCheckResult.Failure:
+                CurrentTurn().ImprovedLifestyleBonus = 1;
+                CurrentTurn().ImprovedLifestyleMalus = 1;
+                break;
+            case EnumCheckResult.CritFailure:
+                CurrentTurn().ImprovedLifestyleMalus = 1;
+                UnrestPoints += 1;
+                break;
+            default: throw new Exception("Unknown check result.");
+        }        
+            
         CurrentTurn().Phase = EnumPhase.Commerce;
-        CurrentTurn().Step = EnumStep.ApproveExpenses;
+        CurrentTurn().Step = EnumStep.TapCommodities;
+        if(result == EnumCheckResult.CritFailure)
+        {
+            CurrentTurn().Pause(EnumPausedReason.RuinUp);
+        }
     }
 
-    public void SpendRP(int amount, bool forced)
+    public void TapTreasury()
+    {
+        if (CurrentTurn().Phase != EnumPhase.Commerce) { throw new Exception("You're not in the 'Commerce' Phase."); }
+        if (CurrentTurn().Step != EnumStep.ApproveExpenses) { throw new Exception("You're not in the 'Approve Expenses' Step."); }
+
+        EnumCheckResult result = UseActivity(EnumActivity.TapTreasury);
+        if(TreasuryTapped)
+        {
+            result = Check.WorsenCheckResult(Check.WorsenCheckResult(result));
+        }
+        switch (result)
+        {
+            case EnumCheckResult.CritSuccess:                
+                break;
+            case EnumCheckResult.Success:
+                CurrentTurn().TapTreasurySuccessMalus = true;
+                break;
+            case EnumCheckResult.Failure:
+                CurrentTurn().TapTreasuryFailureMalus = true;
+                break;
+            case EnumCheckResult.CritFailure:
+                CurrentTurn().TapTreasuryFailureMalus = true;
+                UnrestPoints += 1;
+                break;
+            default: throw new Exception("Unknown check result.");
+        }
+
+        CurrentTurn().Phase = EnumPhase.Commerce;
+        CurrentTurn().Step = EnumStep.TapCommodities;
+        if (result == EnumCheckResult.CritFailure)
+        {
+            CurrentTurn().Pause(EnumPausedReason.RuinUp);
+        }
+    }
+
+    public void TradeCommodities(int amount, EnumCommodity commodity, bool withDiplomaticRelation)
+    {
+        if (CurrentTurn().Phase != EnumPhase.Commerce) { throw new Exception("You're not in the 'Commerce' Phase."); }
+        if (CurrentTurn().Step != EnumStep.TapCommodities) { throw new Exception("You're not in the 'Tap Commodities' Step."); }
+
+        if (amount > 4) { throw new Exception("You can't trade more than 4 commodities at a time."); }
+        if (amount <= 0) { throw new Exception("You must trade at least 1 commodity."); }
+        if (commodity == EnumCommodity.None) { throw new Exception("You must choose a valid commodity."); }
+        if (amount > Commodities[commodity].Amount) { throw new Exception("You can't trade more commodity than you have."); }
+
+        Commodities[commodity].Amount -= amount;
+        CurrentTurn().TradedCommodity = true;
+
+        EnumCheckResult result = UseActivity(EnumActivity.TapTreasury, withDiplomaticRelation);   
+        switch (result)
+        {
+            case EnumCheckResult.CritSuccess:
+                CurrentTurn().NextTurnBonusDice += amount * 2;
+                break;
+            case EnumCheckResult.Success:
+                CurrentTurn().NextTurnBonusDice += amount;
+                break;
+            case EnumCheckResult.Failure:
+                CurrentTurn().NextTurnBonusDice += 1;
+                break;
+            case EnumCheckResult.CritFailure:
+                if(LastTurn().TradedCommodity)
+                {
+                    UnrestPoints += 1;
+                }
+                break;
+            default: throw new Exception("Unknown check result.");
+        }
+
+        CurrentTurn().Phase = EnumPhase.Commerce;
+        CurrentTurn().Step = EnumStep.ManageTradeAgreements;
+    }
+
+    public void StopTapCommodities()
+    {
+        if (CurrentTurn().Phase != EnumPhase.Commerce) { throw new Exception("You're not in the 'Commerce' Phase."); }
+        if (CurrentTurn().Step != EnumStep.TapCommodities) { throw new Exception("You're not in the 'Tap Commodities' Step."); }
+
+        CurrentTurn().Phase = EnumPhase.Commerce;
+        CurrentTurn().Step = EnumStep.ManageTradeAgreements;
+    }
+
+    public void ManageTradeAgreement(int amount)
+    {
+        if (CurrentTurn().Phase != EnumPhase.Commerce) { throw new Exception("You're not in the 'Commerce' Phase."); }
+        if (CurrentTurn().Step != EnumStep.ManageTradeAgreements) { throw new Exception("You're not in the 'Manage Trade Agreements' Step."); }
+        
+        if(LastTurn().CritFailedManagedTradeAgreement)
+        {
+            { throw new Exception("You can't 'Manage Trade Agreement' since you critically failed last turn."); }
+        }
+
+        SpendRP(amount * 2);
+
+        int dcModifier = 0;
+        if(LastTurn().ManagedTradeAgreement)
+        {
+            dcModifier = 5;
+        }
+
+        CurrentTurn().ManagedTradeAgreement = true;
+        CurrentTurn().ManagedTradeAgreementAmount = amount;
+
+        EnumCheckResult result = UseActivity(EnumActivity.ManageTradeAgreements, DCModifier: dcModifier);
+        switch (result)
+        {
+            case EnumCheckResult.CritSuccess:
+                CurrentTurn().NextTurnBonusDice += amount;
+                CurrentTurn().NextTurnBonusCommodity += amount;
+                CurrentTurn().NextTurnBonusCommodityMaxLuxury += amount / 2;
+                break;
+            case EnumCheckResult.Success:
+                
+                break;
+            case EnumCheckResult.Failure:
+                CurrentTurn().NextTurnBonusRP += amount;
+                break;
+            case EnumCheckResult.CritFailure:
+                CurrentTurn().CritFailedManagedTradeAgreement = true;
+                break;
+            default: throw new Exception("Unknown check result.");
+        }
+
+        CurrentTurn().Phase = EnumPhase.Activity;
+        CurrentTurn().Step = EnumStep.Leadership;
+        if(result == EnumCheckResult.Success)
+        { 
+            CurrentTurn().Pause(EnumPausedReason.ChoiceFromManageTrade);
+        }
+    }
+
+    public void ChoiceManageTradeAgreement(bool choice)
+    {
+        if(CurrentTurn().PausedReason != EnumPausedReason.ChoiceFromManageTrade)
+        {
+            throw new Exception("You don't have to make a 'Manage Trade Agreement' choice.");
+        }
+
+        if(choice)
+        {
+            CurrentTurn().NextTurnBonusDice += CurrentTurn().ManagedTradeAgreementAmount;
+        }
+        else
+        {
+            CurrentTurn().NextTurnBonusCommodity += CurrentTurn().ManagedTradeAgreementAmount;
+            CurrentTurn().NextTurnBonusCommodityMaxLuxury += CurrentTurn().ManagedTradeAgreementAmount / 2;
+        }
+    }
+
+    public void CapitalInvestment(bool refund)
+    {
+        if(refund && !TreasuryTapped)
+        {
+            throw new Exception("There is no Tapped Treasury to refund.");
+        }
+
+
+    }
+
+    public void SpendRP(int amount, bool forced = false)
     {        
         if(RessourcePoints - amount < 0)
         {
             if (forced)
             {
-                CurrentTurn().Pause(EnumPausedReason.RuinFromNoRP);
+                CurrentTurn().Pause(EnumPausedReason.RuinUp);
             }
             else
             {
@@ -1353,23 +1576,23 @@ public class Kingdom
         RessourcePoints = Math.Max(RessourcePoints - amount, 0);
     }
 
-    public void AddRuinFromNoRP(EnumRuinCategory ruin) 
+    public void RemoveRuin(EnumRuinCategory ruin)
     {
-        if(CurrentTurn().PausedReason != EnumPausedReason.RuinFromNoRP)
-        {
-            throw new Exception("You don't need to add ruin from a forced expense of RP.");
-        }
-        AddRuin(1, ruin);
-        CurrentTurn().Unpause();
-    }
-
-    public void RemoveRuinFromRefuge(EnumRuinCategory ruin)
-    {
-        if (CurrentTurn().PausedReason != EnumPausedReason.RuinFromNoRP)
+        if (CurrentTurn().PausedReason != EnumPausedReason.RuinDown)
         {
             throw new Exception("You don't need to remove ruin from an added Refuge.");
         }
         RemoveRuin(1, ruin);
+        CurrentTurn().Unpause();
+    }
+
+    public void AddRuinPaused(int amount, EnumRuinCategory ruin)
+    {
+        if (CurrentTurn().PausedReason != EnumPausedReason.RuinUp)
+        {
+            throw new Exception("You don't need to add ruin.");
+        }
+        AddRuin(amount, ruin);
         CurrentTurn().Unpause();
     }
 
@@ -1381,6 +1604,20 @@ public class Kingdom
 
         CurrentTurn().Phase = EnumPhase.Commerce;
         CurrentTurn().Step = EnumStep.ApproveExpenses;
+
+        EnumCheckResult result = EnumCheckResult.Success;
+        switch (result)
+        {
+            case EnumCheckResult.CritSuccess:
+                break;
+            case EnumCheckResult.Success:
+                break;
+            case EnumCheckResult.Failure:
+                break;
+            case EnumCheckResult.CritFailure:
+                break;
+            default: throw new Exception("Unknown check result.");
+        }
     }
 
 
