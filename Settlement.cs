@@ -95,6 +95,18 @@ public class Settlement
     //TODO
     public bool IsOvercrowded()
     { return false; }
+
+    public bool ContainsStructure(EnumStructure structure)
+    {
+        foreach(UrbanGrid forGrid in UrbanGrids.Values)
+        {
+            foreach (Block forBlock in forGrid.Blocks.Values)
+            {
+                return forBlock.Structures.Contains(structure);
+            }
+        }
+        return false;
+    }
 }
 
 public class UrbanGrid

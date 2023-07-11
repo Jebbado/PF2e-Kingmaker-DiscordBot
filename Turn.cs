@@ -113,6 +113,9 @@ public class Turn
     public int ManagedTradeAgreementAmount;
     public bool CritFailedManagedTradeAgreement;
 
+    //Activity Phase
+    public Dictionary<EnumLeaderRole, List<EnumActivity>> LeadershipActivities;
+
 
 
     public EnumPhase PausedPhase = EnumPhase.None;

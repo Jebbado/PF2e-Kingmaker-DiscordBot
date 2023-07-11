@@ -1620,6 +1620,29 @@ public class Kingdom
         }
     }
 
+    public bool LeadershipActivityAllowed(EnumActivity activity, EnumLeaderRole role)
+    {
+        int activityPerLeader = 2;
+        if(CapitalSettlement().ContainsStructure(EnumStructure.Castle) 
+        || CapitalSettlement().ContainsStructure(EnumStructure.Palace) 
+        || CapitalSettlement().ContainsStructure(EnumStructure.TownHall))
+        {
+            activityPerLeader = 3;
+        }
+
+        if(CurrentTurn().LeadershipActivities[role].Contains(activity))
+        {
+            return false;
+            //TODO : But not for exceptions to add here.
+        }
+
+        if(CurrentTurn().LeadershipActivities[role].Count() >= activityPerLeader) 
+        {
+            return false;
+        }
+
+        return true;
+    }
 
 }
 
