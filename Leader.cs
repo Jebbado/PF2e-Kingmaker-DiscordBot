@@ -20,8 +20,9 @@ public class Leader
     public bool IsInvested { get; set; }
     public bool IsPlayerCharacter { get; set; }
     public bool IsVacant { get; set; }
+    public bool IsIngratiated { get; set; }
 
-    public Leader(string name, EnumLeaderRole role, bool invested, bool isPlayerCharacter = true)
+    public Leader(string name, EnumLeaderRole role, bool invested, bool isPlayerCharacter = true, bool ingratiated = true)
     {
         if (name == null || name == "") throw new Exception("Name must not be empty.");
 
@@ -32,6 +33,7 @@ public class Leader
         IsInvested = invested;
         IsPlayerCharacter = isPlayerCharacter;
         IsVacant = false;
+        IsIngratiated = ingratiated;
     }     
 
     public static EnumAbilityScore KeyAbilityForRole(EnumLeaderRole role)

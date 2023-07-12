@@ -11,7 +11,7 @@
 public class Commodity
 {
     public EnumCommodity Name { get; set; }
-    public int Amount;
+    public int Amount { get; set; }
 
     public Commodity(EnumCommodity name, int amount = 0) 
     {

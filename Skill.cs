@@ -16,7 +16,7 @@
     Statecraft,
     Trade,
     Warfare,
-    Wilderness
+    Wilderness    
 }
 
 public enum EnumSkillTraining

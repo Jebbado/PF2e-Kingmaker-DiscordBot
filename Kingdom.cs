@@ -1,4 +1,7 @@
-﻿public enum EnumCharter
+﻿using System.Data;
+using System.Xml.Linq;
+
+public enum EnumCharter
 {
     None,
     Conquest,
@@ -555,7 +558,7 @@ public class Kingdom
 
         returnedDC += KingdomSizeControlDCModifier();
 
-        if (Leaders[EnumLeaderRole.Ruler].IsVacant && ! CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Ruler))
+        if (Leaders[EnumLeaderRole.Ruler].IsVacant && ! CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.Ruler))
         {
             returnedDC += 2;
         }
@@ -736,7 +739,17 @@ public class Kingdom
 
     public void RemoveRuin(int ruinAmount, EnumRuinCategory ruinCategory)
     {
-        RuinScore[ruinCategory] = Math.Max(RuinScore[ruinCategory] - ruinAmount, 0); 
+        if (RuinScore[ruinCategory] == 0 && RuinItemPenalty[ruinCategory] > 0)
+        {
+            if (Check.MakeFlatCheck(16))
+            {
+                RuinItemPenalty[ruinCategory] -= 1;
+            }
+        }
+        else
+        {
+            RuinScore[ruinCategory] = Math.Max(RuinScore[ruinCategory] - ruinAmount, 0);
+        }
     }
 
     public static EnumRuinCategory RuinCategoryByAbility(EnumAbilityScore enumAbility)
@@ -823,7 +836,8 @@ public class Kingdom
                 Feats.Add(EnumFeats.EnvyOfTheWorld);
                 break;
             case 21:
-                throw new NotSupportedException("You're too OP, stop right there !");
+                KingdomLevel = 20;
+                throw new NotSupportedException("Level over 20 is not supported. Kingdom has been put back to 20.");
         }
                 
     }
@@ -859,14 +873,101 @@ public class Kingdom
         FamePoints = 1;
     }
 
+    public void NewLeadership(EnumSkills skill, EnumLeaderRole role, string name, bool invested, bool isPC)
+    {
+        
+        if (CurrentTurn().Step != EnumStep.AssignLeadership && Leaders[role].IsVacant) 
+        {   
+            throw new Exception("You can only attempt 'New Leadership' in the 'Asssign Leadership' step, unless there is an empty role.");
+        }
+
+        if (invested && InvestedLeadersCount() >= 4) throw new Exception("There are already 4 invested Leaders.");
+
+        if(LastTurn().RejectedNewLeaders.Contains(role)) 
+        {
+            CurrentTurn().RejectedNewLeadersRetried.Add(role);
+        }
+
+        List<Bonus> bonus = new List<Bonus>();       
+        EnumActivity chosenActivity;
+        switch(skill)
+        {
+            case EnumSkills.Intrigue:
+                if(role == EnumLeaderRole.Emissary || role == EnumLeaderRole.Treasurer) 
+                { 
+                    bonus.Add(new Bonus(EnumBonusType.CircumstanceBonus, 2)); 
+                }
+                chosenActivity = EnumActivity.NewLeadershipIntrigue; 
+                break;
+            case EnumSkills.Politics:
+                if (role == EnumLeaderRole.Counselor || role == EnumLeaderRole.Ruler)
+                {
+                    bonus.Add(new Bonus(EnumBonusType.CircumstanceBonus, 2));
+                }
+                chosenActivity = EnumActivity.NewLeadershipPolitics; break;
+            case EnumSkills.Statecraft:
+                if (role == EnumLeaderRole.Magister || role == EnumLeaderRole.Viceroy)
+                {
+                    bonus.Add(new Bonus(EnumBonusType.CircumstanceBonus, 2));
+                }
+                chosenActivity = EnumActivity.NewLeadershipStatecraft; break;
+            case EnumSkills.Warfare:
+                if (role == EnumLeaderRole.General || role == EnumLeaderRole.Warden)
+                {
+                    bonus.Add(new Bonus(EnumBonusType.CircumstanceBonus, 2));
+                }
+                chosenActivity = EnumActivity.NewLeadershipWarfare; break;
+            default : throw new Exception("You can't attempt 'New Leadership' with this skill.");
+        }
+
+        if (role == EnumLeaderRole.Ruler)
+        {
+            bonus.Add(new Bonus(EnumBonusType.CircumstancePenalty, 4));
+        }
+
+        EnumCheckResult result = UseActivity(chosenActivity, bonus);
+        switch (result)
+        {
+            case EnumCheckResult.CritSuccess:
+                Leaders[role] = new Leader(name, role, invested, isPC, true);
+                CurrentTurn().LovedNewLeaders.Add(role);
+                break;
+            case EnumCheckResult.Success:
+                Leaders[role] = new Leader(name, role, invested, isPC, true);
+                break;
+            case EnumCheckResult.Failure:
+                Leaders[role] = new Leader(name, role, invested, isPC, false);
+                break;
+            case EnumCheckResult.CritFailure:
+                CurrentTurn().RejectedNewLeaders.Add(role);
+                Leaders[role].IsVacant = true;
+                UnrestPoints++;
+                break;
+            default: throw new Exception("Unknown check result.");
+        }
+        if(result != EnumCheckResult.CritSuccess && role == EnumLeaderRole.Ruler)
+        {
+            UnrestPoints++;
+        }
+    }
+
     public void MakeLeaderVacant(EnumLeaderRole role, bool sacrificeActivity)
     {
         if (CurrentTurn().Phase != EnumPhase.Upkeep) throw new Exception("You're not in the 'Upkeep' phase.");
         if (CurrentTurn().Step != EnumStep.AssignLeadership) throw new Exception("You're not at the 'Assign Leadership Roles' step.");
 
-        //This means 'Upkeep Step 1 Assign Leadership' is finished
+        //This means players decided 'Upkeep Step 1 Assign Leadership' is finished
         if (role == EnumLeaderRole.None)
         {
+            foreach(EnumLeaderRole forRole in LastTurn().RejectedNewLeaders)
+            {
+                if( ! CurrentTurn().RejectedNewLeadersRetried.Contains(forRole))
+                {
+                    throw new Exception("You must try at least once to reassign a new " + forRole.ToString() + 
+                                        " since you critically failed a 'New Leadership' activity for this role last Turn.");
+                }
+            }
+
             CurrentTurn().Step = EnumStep.AdjustUnrest;
             AdjustUnrest();
             return;
@@ -876,7 +977,7 @@ public class Kingdom
 
         if (sacrificeActivity)
         {
-            CurrentTurn().LeaderGaveUpActivity.Add(role);
+            CurrentTurn().LeadersGivingUpActivity.Add(role);
         }
     }
 
@@ -898,16 +999,81 @@ public class Kingdom
             return;
         }
 
-        if(ExperiencePoints >= 1000)
+        if(ExperiencePoints >= 1000 && ! CurrentTurn().LeveledUp)
         {
             LevelUp();
         }
         else
         {
+            if(LeadersNotAllIngratiated() && ! CurrentTurn().IngratiateEnded)
+            { 
+                CurrentTurn().Pause(EnumPausedReason.Ingratiate);
+                return;                
+            }
             ThisTurn++;
             Turns[ThisTurn] = new Turn(ThisTurn);
             ResetFame();
         }
+    }
+
+    public void Ingratiate(EnumLeaderRole role, EnumSkills skill)
+    {
+        if (CurrentTurn().PausedReason != EnumPausedReason.Ingratiate) throw new Exception("You can only ingratiate a leader at the end of the turn.");
+        if (Leaders[role].IsIngratiated) throw new Exception("This leader is already ingratiated.");        
+        if (CurrentTurn().NewLeadersIngratiateTried.Contains(role)) throw new Exception("You already tried to ingratiate this leader this turn.");
+
+        //Players decided not to try to ingratiate any other Leader
+        if (role == EnumLeaderRole.None)
+        {
+            CurrentTurn().IngratiateEnded = true;
+            CurrentTurn().Unpause();
+            EndTurn();
+        }
+
+        EnumActivity activity;
+        switch(skill)
+        {
+            case EnumSkills.Intrigue:
+                activity = EnumActivity.IngratiateIntrigue; break;
+            case EnumSkills.Politics:
+                activity = EnumActivity.IngratiatePolitics; break;
+            case EnumSkills.Statecraft:
+                activity = EnumActivity.IngratiateStatecraft; break;
+            case EnumSkills.Warfare:
+                activity = EnumActivity.IngratiateWarfare; break;
+            default : throw new Exception("You must use a Loyalty-based skill to ingratiate a leader.");
+        }
+        
+        EnumCheckResult result = UseActivity(activity);
+        switch (result)
+        {
+            case EnumCheckResult.CritSuccess:
+                Leaders[role].IsIngratiated = true;
+                break;
+            case EnumCheckResult.Success:
+                Leaders[role].IsIngratiated = true;
+                break;
+            case EnumCheckResult.Failure:
+                break;
+            case EnumCheckResult.CritFailure:
+                CurrentTurn().RejectedNewLeaders.Add(role);
+                Leaders[role].IsVacant = true;
+                UnrestPoints++;
+                break;
+            default: throw new Exception("Unknown check result.");
+        }
+    }
+
+    public bool LeadersNotAllIngratiated()
+    {
+        foreach (Leader forLeader in Leaders.Values)
+        {
+            if (!forLeader.IsIngratiated)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public bool IsGameOver()
@@ -937,8 +1103,8 @@ public class Kingdom
         return false;
     }
 
-    public EnumCheckResult UseActivity(EnumActivity usedActivityParam, bool thatVerySpecificBoolForTrade = false, int DCModifier = 0)
-    {
+    public EnumCheckResult UseActivity(EnumActivity usedActivityParam, List<Bonus>? paramBonusList = null, int DCModifier = 0, EnumLeaderRole role = EnumLeaderRole.None)
+    {       
         Activity usedActivity = Activity.ActivityList()[usedActivityParam];
         Skill usedSkill = Skill.SkillList()[usedActivity.RequiredSkill];
 
@@ -958,7 +1124,16 @@ public class Kingdom
         if ((usedActivity.Phase != CurrentTurn().Phase || usedActivity.Step != CurrentTurn().Step) && usedActivity.Phase != EnumPhase.None && usedActivity.Step != EnumStep.None)
         {
             throw new Exception("This activity must be used during " + usedActivity.Phase + "Phase and " + usedActivity.Step + " Step.");
-        }        
+        }
+
+        if (usedActivity.Step == EnumStep.Leadership)
+        {
+            if(role == EnumLeaderRole.None)
+            {
+                throw new ArgumentException("The leader role attempting the activity must be specified for Leadership activities.");
+            }
+            LeadershipActivityAllowed(usedActivity.ActivityName, role);
+        }
 
         int totalModifier = Abilities[usedSkill.KeyAbility].Modifier();
 
@@ -969,6 +1144,13 @@ public class Kingdom
         }
 
         BonusManager BonusList = new BonusManager();
+        if (paramBonusList != null)
+        {
+            foreach (Bonus forBonus in paramBonusList)
+            {
+                BonusList.AddBonus(forBonus);
+            }            
+        }
 
         //Invested leaders
         if (SkillHasStatusBonusFromInvestedLeader(usedActivity.RequiredSkill))
@@ -981,53 +1163,53 @@ public class Kingdom
         }
 
         //Vacancy Penalities
-        if (Leaders[EnumLeaderRole.Ruler].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Ruler) == false)
+        if (Leaders[EnumLeaderRole.Ruler].IsVacant && CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.Ruler) == false)
         {
             BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
         }
-        if (Leaders[EnumLeaderRole.Counselor].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Counselor) == false)
+        if (Leaders[EnumLeaderRole.Counselor].IsVacant && CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.Counselor) == false)
         {
             if (usedSkill.KeyAbility == EnumAbilityScore.Culture)
             {
                 BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
             }
         }
-        if (Leaders[EnumLeaderRole.Emissary].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Emissary) == false)
+        if (Leaders[EnumLeaderRole.Emissary].IsVacant && CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.Emissary) == false)
         {
             if (usedSkill.KeyAbility == EnumAbilityScore.Loyalty)
             {
                 BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
             }
         }
-        if (Leaders[EnumLeaderRole.Treasurer].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Treasurer) == false)
+        if (Leaders[EnumLeaderRole.Treasurer].IsVacant && CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.Treasurer) == false)
         {
             if (usedSkill.KeyAbility == EnumAbilityScore.Economy)
             {
                 BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
             }
         }
-        if (Leaders[EnumLeaderRole.Viceroy].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Viceroy) == false)
+        if (Leaders[EnumLeaderRole.Viceroy].IsVacant && CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.Viceroy) == false)
         {
             if (usedSkill.KeyAbility == EnumAbilityScore.Stability)
             {
                 BonusList.AddBonus(EnumBonusType.UntypedPenalty, -1);
             }
         }
-        if (Leaders[EnumLeaderRole.Warden].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Warden) == false)
+        if (Leaders[EnumLeaderRole.Warden].IsVacant && CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.Warden) == false)
         {
             if (usedActivity.Step == EnumStep.Region)
             {
                 BonusList.AddBonus(EnumBonusType.UntypedPenalty, -4);
             }
         }
-        if (Leaders[EnumLeaderRole.General].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.General) == false)
+        if (Leaders[EnumLeaderRole.General].IsVacant && CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.General) == false)
         {
             if (usedActivity.Phase == EnumPhase.Warfare)
             {
                 BonusList.AddBonus(EnumBonusType.UntypedPenalty, -4);
             }
         }
-        if (Leaders[EnumLeaderRole.Magister].IsVacant && CurrentTurn().LeaderGaveUpActivity.Contains(EnumLeaderRole.Magister) == false)
+        if (Leaders[EnumLeaderRole.Magister].IsVacant && CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.Magister) == false)
         {
             if (usedActivity.Phase == EnumPhase.Warfare)
             {
@@ -1080,13 +1262,19 @@ public class Kingdom
             {
                 BonusList.AddBonus(EnumBonusType.CircumstanceBonus, 2);
             }
-        }
+        }       
 
-        //thatVerySpecificBoolForTrade
-        if(thatVerySpecificBoolForTrade)
+        //New Leadership
+        if(CurrentTurn().LovedNewLeaders.Contains(role) || LastTurn().LovedNewLeaders.Contains(role))
         {
             BonusList.AddBonus(EnumBonusType.CircumstanceBonus, 1);
         }
+        if ( ! Leaders[role].IsIngratiated)
+        {
+            BonusList.AddBonus(EnumBonusType.CircumstancePenalty, 1);
+        }
+
+
 
 
         totalModifier += BonusList.TotalBonus();
@@ -1099,6 +1287,11 @@ public class Kingdom
         if (ThisTurn == 1)
         {
             UpkeepCollectRessources();
+        }
+
+        if (Leaders[EnumLeaderRole.Ruler].IsVacant && ! CurrentTurn().LeadersGivingUpActivity.Contains(EnumLeaderRole.Ruler))
+        {
+            UnrestPoints += DiceRoller.RollDice(1, 4);
         }
 
         foreach (Settlement forSettlement in Settlements)
@@ -1447,8 +1640,14 @@ public class Kingdom
 
         Commodities[commodity].Amount -= amount;
         CurrentTurn().TradedCommodity = true;
+        
+        List<Bonus> bonus = new List<Bonus>();
+        if (withDiplomaticRelation)
+        {
+            bonus.Add(new Bonus(EnumBonusType.CircumstanceBonus, 1));
+        }
 
-        EnumCheckResult result = UseActivity(EnumActivity.TapTreasury, withDiplomaticRelation);   
+        EnumCheckResult result = UseActivity(EnumActivity.TapTreasury, bonus);   
         switch (result)
         {
             case EnumCheckResult.CritSuccess:
@@ -1576,11 +1775,11 @@ public class Kingdom
         RessourcePoints = Math.Max(RessourcePoints - amount, 0);
     }
 
-    public void RemoveRuin(EnumRuinCategory ruin)
+    public void ChooseRuinToRemove(EnumRuinCategory ruin)
     {
         if (CurrentTurn().PausedReason != EnumPausedReason.RuinDown)
         {
-            throw new Exception("You don't need to remove ruin from an added Refuge.");
+            throw new Exception("You don't need to remove ruin right now.");
         }
         RemoveRuin(1, ruin);
         CurrentTurn().Unpause();
@@ -1596,10 +1795,48 @@ public class Kingdom
         CurrentTurn().Unpause();
     }
 
+    public void LeadershipActivityAllowed(EnumActivity activity, EnumLeaderRole role)
+    {
+        if( ! CurrentTurn().LeadershipActivities.ContainsKey(role))
+        {
+            throw new Exception("This role doesn't have activities this turn.");
+        }
+
+        int activityPerLeader = 2;
+        if(CapitalSettlement().ContainsStructure(EnumStructure.Castle) 
+        || CapitalSettlement().ContainsStructure(EnumStructure.Palace) 
+        || CapitalSettlement().ContainsStructure(EnumStructure.TownHall))
+        {
+            activityPerLeader = 3;
+        }
+
+        if(CurrentTurn().LeadershipActivities[role].Contains(activity))
+        {
+            //TODO : But not for exception cases to be added here.
+            throw new Exception("This activity can't be attempted twice in a turn by the same leader.");
+        }
+
+        if(CurrentTurn().LeadershipActivities[role].Count() >= activityPerLeader) 
+        {
+            throw new Exception("This leader already attempted all its activities.");
+        }
+    }
+
+    public void ReplaceInvestedLeader(EnumLeaderRole role1, EnumLeaderRole role2)
+    {
+        if (CurrentTurn().Step != EnumStep.AssignLeadership) { throw new Exception("You can only switch invested roles at the 'Asssign Leadership' step."); }
+        if (role1 == role2) { throw new Exception("You must choose 2 different roles to exchange."); }
+        if (Leaders[role1].IsInvested) { throw new Exception("Your Leader to uninvest must be invested."); }
+        if ( ! Leaders[role2].IsInvested) { throw new Exception("Your Leader to invest must not be already invested."); }
+
+        Leaders[role1].IsInvested = false;
+        Leaders[role2].IsInvested = true;
+    }
+
 
     public void IsOnlyATemplate()
     {
-        if (CurrentTurn().Phase != EnumPhase.Commerce) { throw new Exception("You're not in the 'Commerce' Phase."); }     
+        if (CurrentTurn().Phase != EnumPhase.Commerce) { throw new Exception("You're not in the 'Commerce' Phase."); }
         if (CurrentTurn().Step != EnumStep.CollectTaxes) { throw new Exception("You're not in the 'Collect Taxes' Step."); }
 
         CurrentTurn().Phase = EnumPhase.Commerce;
@@ -1619,30 +1856,5 @@ public class Kingdom
             default: throw new Exception("Unknown check result.");
         }
     }
-
-    public bool LeadershipActivityAllowed(EnumActivity activity, EnumLeaderRole role)
-    {
-        int activityPerLeader = 2;
-        if(CapitalSettlement().ContainsStructure(EnumStructure.Castle) 
-        || CapitalSettlement().ContainsStructure(EnumStructure.Palace) 
-        || CapitalSettlement().ContainsStructure(EnumStructure.TownHall))
-        {
-            activityPerLeader = 3;
-        }
-
-        if(CurrentTurn().LeadershipActivities[role].Contains(activity))
-        {
-            return false;
-            //TODO : But not for exceptions to add here.
-        }
-
-        if(CurrentTurn().LeadershipActivities[role].Count() >= activityPerLeader) 
-        {
-            return false;
-        }
-
-        return true;
-    }
-
 }
 

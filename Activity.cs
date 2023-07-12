@@ -67,7 +67,12 @@
     SendDiplomaticEnvoy,
     SupernaturalSolution,
     TapTreasury,
-    TradeCommodities
+    TradeCommodities,
+    //Not a real activity, but makes it fit nicely in the system
+    IngratiateIntrigue,
+    IngratiatePolitics,
+    IngratiateStatecraft,
+    IngratiateWarfare
 }
 
 public class Activity
@@ -156,7 +161,10 @@ public class Activity
         //returnedList[EnumActivity.SupernaturalSolution] = new Activity(EnumSkills.Exploration, EnumActivityPhase.Region);
         //returnedList[EnumActivity.TapTreasury] = new Activity(EnumSkills.Exploration, EnumActivityPhase.Region);
         //returnedList[EnumActivity.TradeCommodities] = new Activity(EnumSkills.Exploration, EnumActivityPhase.Region);
-
+        //IngratiateIntrigue,
+        //IngratiatePolitics,
+        //IngratiateStatecraft,
+        //IngratiateWarfare
 
         return returnedList;
     }

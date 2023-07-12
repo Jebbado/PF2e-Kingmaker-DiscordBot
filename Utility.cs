@@ -127,6 +127,7 @@ public class Bonus
 
     public Bonus(EnumBonusType bonusType, int bonusAmount) 
     {
+        if (bonusAmount == 0) throw new Exception("A zero is not a Bonus.");
         BonusType = bonusType; 
         BonusAmount = bonusAmount;
     }
@@ -141,11 +142,20 @@ public class BonusManager
 
     }
 
-    public void AddBonus(EnumBonusType bonusType, int bonusValue)
+    //If an 
+    public BonusManager(BonusManager paramBonusList)
     {
-        if (bonusValue == 0) throw new Exception("A zero is not a Bonus.");
-        
+
+    }    
+
+    public void AddBonus(EnumBonusType bonusType, int bonusValue)
+    {                
         BonusList.Add(new Bonus(bonusType, bonusValue));
+    }
+
+    public void AddBonus(Bonus bonus)
+    {
+        BonusList.Add(bonus);
     }
 
     public int TotalBonus()

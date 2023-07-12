@@ -46,7 +46,10 @@ public enum EnumStep
     CheckEvent,
     EventResolution,
     ApplyXP,
-    LevelUp
+    LevelUp,
+
+    //End
+    Ingratiate
 }
 
 public enum EnumPausedReason
@@ -54,7 +57,8 @@ public enum EnumPausedReason
     None,
     RuinDown,
     RuinUp,
-    ChoiceFromManageTrade
+    ChoiceFromManageTrade,
+    Ingratiate
 }
 
 public class Game
@@ -88,35 +92,56 @@ public class Turn
         TurnID = turnID;
         Phase = phase;
         Step = step;
-        LeaderGaveUpActivity = new List<EnumLeaderRole>();
+        LeadersGivingUpActivity = new List<EnumLeaderRole>();
+        LovedNewLeaders = new List<EnumLeaderRole>();
+        RejectedNewLeaders = new List<EnumLeaderRole>();
+        RejectedNewLeadersRetried = new List<EnumLeaderRole>();
+        NewLeadersIngratiateTried = new List<EnumLeaderRole>();
     }
 
-    public List<EnumLeaderRole> LeaderGaveUpActivity { get; set; } //To counteract Vacancy Penality.
+    public bool WentWithoutHex;
+    public int NextTurnBonusDice;
+    public int NextTurnBonusRP;
+    public int NextTurnBonusCommodity;
+    public int NextTurnBonusCommodityMaxLuxury;
+
+    //Upkeep Phase
+    public List<EnumLeaderRole> LeadersGivingUpActivity { get; set; } //To counteract Vacancy Penality.
+    public List<EnumLeaderRole> LovedNewLeaders { get; set; }
+    public List<EnumLeaderRole> RejectedNewLeaders { get; set; }
+    public List<EnumLeaderRole> RejectedNewLeadersRetried { get; set; }
+    public List<EnumLeaderRole> NewLeadersIngratiateTried { get; set; }
+    public bool IngratiateEnded;
     public int UpkeepUnrestRuinPoints;
     public bool UpkeepUnrestLostHex;
     public bool CollectedTaxes;
     public int CollectedTaxesBonus;
-    public bool WentWithoutHex;
-    public bool CapturedHex;
-    public bool CapturedLandmark;
-    public bool CapturedRefuge;
+
+    //Commerce Phase
     public int ImprovedLifestyleBonus;
     public int ImprovedLifestyleMalus;
     public bool TapTreasurySuccessMalus;
     public bool TapTreasuryFailureMalus;
     public bool TradedCommodity;
-    public int NextTurnBonusDice;
-    public int NextTurnBonusRP;
-    public int NextTurnBonusCommodity;
-    public int NextTurnBonusCommodityMaxLuxury;
     public bool ManagedTradeAgreement;
     public int ManagedTradeAgreementAmount;
     public bool CritFailedManagedTradeAgreement;
 
     //Activity Phase
-    public Dictionary<EnumLeaderRole, List<EnumActivity>> LeadershipActivities;
+        //Leadership
+    public Dictionary<EnumLeaderRole, List<EnumActivity>> LeadershipActivities = new Dictionary<EnumLeaderRole, List<EnumActivity>>();
 
 
+    //Region
+    public int RegionActivitiesUsed = 0;
+    public bool UsedFavoredLand = false;
+
+    public bool CapturedHex;
+    public bool CapturedLandmark;
+    public bool CapturedRefuge;
+
+    //End
+    public bool LeveledUp;
 
     public EnumPhase PausedPhase = EnumPhase.None;
     public EnumStep PausedStep = EnumStep.None;
