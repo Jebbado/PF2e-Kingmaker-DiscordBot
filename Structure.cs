@@ -83,7 +83,7 @@ public enum EnumStructure
 
 public class Structure
 {
-    private EnumStructure Name;
+    public EnumStructure Name { get; }
     public EnumStructureType StructureType { get; }
     private int RequiredLevel;
     public int LotsOccupied { get; }
@@ -95,7 +95,7 @@ public class Structure
     private bool IsEdifice;
     private bool IsFamous;
     private bool IsInfamous;
-    private bool IsResidential;    
+    public bool IsResidential { get; }
 
     public Structure(EnumStructure name, EnumStructureType type, int level, int lots, int rp, List<Commodity>  commodities, Dictionary<EnumSkills, EnumSkillTraining> skills,
                     int dc, EnumStructure upFrom, bool edifice, bool fame, bool infamy, bool residential)

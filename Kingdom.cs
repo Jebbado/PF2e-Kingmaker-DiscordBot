@@ -68,6 +68,15 @@ public enum EnumXPMilestone
     KingdomSize100  //120XP
 }
 
+public enum EnumKingdomSize
+{
+    Territory,
+    Province,
+    State,
+    Country,
+    Dominion
+}
+
 public class Kingdom
 {
     private string KingdomName;    
@@ -163,9 +172,14 @@ public class Kingdom
         return Territory;
     }
 
-    public int KingdomSize()
+    public EnumKingdomSize KingdomSize()
     {
-        return Territory().Count;
+        if      (1 <= Territory().Count || Territory().Count <= 9) { return EnumKingdomSize.Territory; }
+        else if (10 < Territory().Count || Territory().Count < 24) { return EnumKingdomSize.Province; }
+        else if (25 < Territory().Count || Territory().Count < 49) { return EnumKingdomSize.State; }
+        else if (50 < Territory().Count || Territory().Count < 99) { return EnumKingdomSize.Country; }
+        else if (Territory().Count > 100)                          { return EnumKingdomSize.Dominion; }
+        else { throw new ArgumentOutOfRangeException(); }
     }
 
     public void AssignCharter(EnumCharter charter)
@@ -472,13 +486,13 @@ public class Kingdom
             Territory()[SettlementHex.Key()] = SettlementHex;
         }
 
-        if(Settlements.Count == 0)
+        if( ! Milestones.Contains(EnumXPMilestone.FirstVillage) && Settlements.Count == 0)
         {
             Milestones.Add(EnumXPMilestone.FirstVillage);
             AddXP(40);
         }
 
-        Settlements.Add(new Settlement(settlementName, Territory()[posX+":"+posY], isCapital));        
+        Settlements.Add(new Settlement(this, settlementName, Territory()[posX+":"+posY], isCapital));        
     }
 
     public void CreateCapital(string name, EnumStructure initialStructure = EnumStructure.None)
@@ -567,33 +581,30 @@ public class Kingdom
     }
 
     public int RessourceDiceSize()
-    {        
-        if (1 <= KingdomSize() || KingdomSize() <= 9)
-        { return 4; }
-        else if (10 < KingdomSize() || KingdomSize() < 24)
-        { return 6; }
-        else if (25 < KingdomSize() || KingdomSize() < 49)
-        { return 8; }
-        else if (50 < KingdomSize() || KingdomSize() < 99)
-        { return 10; }
-        else if (KingdomSize() > 100)
-        { return 12; }
-        else { throw new ArgumentOutOfRangeException(); }
+    {
+        switch(KingdomSize())
+        {
+            case EnumKingdomSize.Territory: return 4;
+            case EnumKingdomSize.Province: return 6;
+            case EnumKingdomSize.State: return 8;
+            case EnumKingdomSize.Country: return 10;
+            case EnumKingdomSize.Dominion: return 12;
+            default: throw new ArgumentOutOfRangeException();
+        }
+        
     }
 
     public int KingdomSizeControlDCModifier()
     {
-        if (1 <= KingdomSize() || KingdomSize() <= 9)
-        { return 0; }
-        else if (10 < KingdomSize() || KingdomSize() < 24)
-        { return 1; }
-        else if (25 < KingdomSize() || KingdomSize() < 49)
-        { return 2; }
-        else if (50 < KingdomSize() || KingdomSize() < 99)
-        { return 3; }
-        else if (KingdomSize() > 100)
-        { return 4; }
-        else { throw new ArgumentOutOfRangeException(); }
+        switch (KingdomSize())
+        {
+            case EnumKingdomSize.Territory: return 0;
+            case EnumKingdomSize.Province: return 1;
+            case EnumKingdomSize.State: return 2;
+            case EnumKingdomSize.Country: return 3;
+            case EnumKingdomSize.Dominion: return 4;
+            default: throw new ArgumentOutOfRangeException();
+        }       
     }  
 
     public int RessourceDiceAmount()
@@ -1367,8 +1378,9 @@ public class Kingdom
         {
             ReduceUnrest(DiceRoller.RollDice(1, 4));
             CurrentTurn().CapturedLandmark = true;
-            if (!Milestones.Contains(EnumXPMilestone.FirstLandmark))
+            if ( ! Milestones.Contains(EnumXPMilestone.FirstLandmark))
             {
+                Milestones.Add(EnumXPMilestone.FirstLandmark);
                 AddXP(40);
             }
         }
@@ -1378,8 +1390,9 @@ public class Kingdom
         {
             CurrentTurn().Pause(EnumPausedReason.RuinDown);
             CurrentTurn().CapturedRefuge = true;
-            if (!Milestones.Contains(EnumXPMilestone.FirstRefuge))
+            if ( ! Milestones.Contains(EnumXPMilestone.FirstRefuge))
             {
+                Milestones.Add(EnumXPMilestone.FirstRefuge);
                 AddXP(40);
             }
         }
@@ -1435,17 +1448,15 @@ public class Kingdom
 
     public int KingdomSizeCommodityStorageModifier()
     {
-        if (1 <= KingdomSize() || KingdomSize() <= 9)
-        { return 4; }
-        else if (10 < KingdomSize() || KingdomSize() < 24)
-        { return 8; }
-        else if (25 < KingdomSize() || KingdomSize() < 49)
-        { return 12; }
-        else if (50 < KingdomSize() || KingdomSize() < 99)
-        { return 16; }
-        else if (KingdomSize() > 100)
-        { return 20; }
-        else { throw new ArgumentOutOfRangeException(); }
+        switch (KingdomSize())
+        {
+            case EnumKingdomSize.Territory: return 4;
+            case EnumKingdomSize.Province: return 8;
+            case EnumKingdomSize.State: return 12;
+            case EnumKingdomSize.Country: return 16;
+            case EnumKingdomSize.Dominion: return 20;
+            default: throw new ArgumentOutOfRangeException();
+        }
     }
 
     public void UpkeepPayConsumption(bool spendForFood)

@@ -1,4 +1,6 @@
 ﻿
+using System.Collections.Generic;
+
 public enum EnumSettlementType
 {
     None,
@@ -35,13 +37,16 @@ public class Settlement
 
     private Dictionary<int, UrbanGrid> UrbanGrids = new Dictionary<int, UrbanGrid>();
     private Dictionary<EnumSettlementSide, EnumSettlementSideFeature> Sides = new Dictionary<EnumSettlementSide, EnumSettlementSideFeature>(); //Might be a list of features for each side, still unclear.
+
+    private Kingdom kingdom;
     
 
-    public Settlement(string name, Hex containerHex, bool isCapital = false) 
+    public Settlement(Kingdom kingdom, string name, Hex containerHex, bool isCapital = false) 
     {
         Name = name;
         SettlementHex = containerHex;
         IsCapital = isCapital;
+        this.kingdom = kingdom;
     }
 
     public void PlaceStructure(EnumStructure structure, int blockNumber, bool isUpgrade = false, int gridNumber = 1) 
@@ -50,6 +55,10 @@ public class Settlement
 
         if (placedStructure.StructureType == EnumStructureType.Infrastructure)
         {
+            if( ! UrbanGrids.ContainsKey(gridNumber))
+            {
+                throw new Exception("You can't build infrastructure in this Urban Grid yet.");
+            }
             if(UrbanGrids[gridNumber].Infrastructures.Contains(structure))
             {
                 throw new Exception("This Infrastructure is already present in this Urban Grid.");
@@ -60,6 +69,11 @@ public class Settlement
         else
         {
             int alreadyOccupiedLots = UrbanGrids[gridNumber].Blocks[blockNumber].OccupiedLots();
+            if(ReadyForNextType() && alreadyOccupiedLots == 0)
+            {
+                SettlementType = NextType();
+            }
+
             int placedStructureOccupiedLots = placedStructure.LotsOccupied;
             if (isUpgrade)
             {
@@ -76,25 +90,45 @@ public class Settlement
 
     public int Consumption()
     {
-        int consumption = 0;
-
-
-
-        return consumption;
+        switch(SettlementType)
+        {
+            case EnumSettlementType.Village : return 1;
+            case EnumSettlementType.Town : return 2;
+            case EnumSettlementType.City: return 4;
+            case EnumSettlementType.Metropolis: return 6;
+            default: throw new Exception("Consumption can't be determined. Settlement type is invalid.");
+        }
     }
 
     public int Influence()
     {
-        int influence = 0;
-
-
-
-        return influence;
+        switch (SettlementType)
+        {
+            case EnumSettlementType.Village: return 0;
+            case EnumSettlementType.Town: return 1;
+            case EnumSettlementType.City: return 2;
+            case EnumSettlementType.Metropolis: return 3;
+            default: throw new Exception("Influence can't be determined. Settlement type is invalid.");
+        }
     }
 
-    //TODO
+    public int Size()
+    {
+        switch (SettlementType)
+        {
+            case EnumSettlementType.Village: return 1;
+            case EnumSettlementType.Town: return 4;
+            case EnumSettlementType.City: return 9;
+            case EnumSettlementType.Metropolis: return 9001;
+            default: throw new Exception("Size can't be determined. Settlement type is invalid.");
+        }
+    }
+    
     public bool IsOvercrowded()
-    { return false; }
+    {
+        return OccupiedBlocks() > ResidentialAmount();
+    }
+
 
     public bool ContainsStructure(EnumStructure structure)
     {
@@ -106,6 +140,109 @@ public class Settlement
             }
         }
         return false;
+    }
+
+    public List<EnumStructure> AllStructures() 
+    {
+        List<EnumStructure> AllStructure = new List<EnumStructure>();
+        foreach (UrbanGrid forGrid in UrbanGrids.Values)
+        {
+            foreach (Block forBlock in forGrid.Blocks.Values)
+            {
+                AllStructure.AddRange(forBlock.Structures);
+            }
+        }
+        return AllStructure;
+    }
+
+    public int ResidentialAmount()
+    {
+        int amount = 0;
+        foreach (EnumStructure structure in AllStructures())
+        {
+            if (Structure.StructureList()[structure].IsResidential) amount++;
+        }
+        return amount;
+    }
+
+    public int OccupiedBlocks()
+    {
+        int occupiedBlock = 0;
+        foreach (UrbanGrid forGrid in UrbanGrids.Values)
+        {
+            foreach (Block forBlock in forGrid.Blocks.Values)
+            {
+                if (forBlock.OccupiedLots() > 0) occupiedBlock++;
+            }
+        }
+        return occupiedBlock;
+    }
+
+    public bool ReadyForNextType()
+    {
+        if(IsOvercrowded()) return false;
+
+        switch(SettlementType)
+        {
+            case EnumSettlementType.Village:
+                if (kingdom.KingdomLevel < 3 || UrbanGrids[1].Blocks[1].OccupiedLots() <= UrbanGrids[1].Blocks[1].LotsAmount)
+                {
+                    return false;
+                }
+                break;
+            case EnumSettlementType.Town:
+                if (kingdom.KingdomLevel < 9)
+                {
+                    return false;
+                }                
+                break;
+            case EnumSettlementType.City:
+                if (kingdom.KingdomLevel < 15)
+                {
+                    return false;
+                }                
+                break;
+            case EnumSettlementType.Metropolis:
+                if (kingdom.KingdomLevel < 9)
+                {
+                    return false;
+                }               
+                break;
+            default: throw new NotImplementedException("This settlement type is unknown.");
+
+        }
+
+        if(SettlementType != EnumSettlementType.Village)
+        {
+            foreach (UrbanGrid forGrid in UrbanGrids.Values)
+            {
+                foreach (Block forBlock in forGrid.Blocks.Values)
+                {
+                    if (forBlock.OccupiedLots() < 2)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public EnumSettlementType NextType()
+    {
+        switch (SettlementType)
+        {
+            case EnumSettlementType.Village:
+                return EnumSettlementType.Town;
+            case EnumSettlementType.Town:
+                return EnumSettlementType.City;
+            case EnumSettlementType.City:
+                return EnumSettlementType.Metropolis;
+            case EnumSettlementType.Metropolis:
+                return EnumSettlementType.Metropolis;
+            default: throw new NotImplementedException("Settlement type is invalid.");
+        }
     }
 }
 
@@ -121,7 +258,6 @@ public class UrbanGrid
 }
 public class Block
 {
-    //private List<Lot> Lots = new List<Lot>();
     public int LotsAmount { get; }
     public List<EnumStructure> Structures = new List<EnumStructure>();
 
@@ -142,10 +278,3 @@ public class Block
         return occupiedLots; 
     }
 }
-//public class Lot
-//{
-//    public Lot()
-//    {
-        
-//    }
-//}
