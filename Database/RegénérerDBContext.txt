@@ -1,0 +1,1 @@
+﻿Scaffold-DbContext "Server=DESKTOP-Mathieu\SQLEXPRESS;Database=Kingmaker;Trusted_Connection=True;TrustServerCertificate=true;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models --Force

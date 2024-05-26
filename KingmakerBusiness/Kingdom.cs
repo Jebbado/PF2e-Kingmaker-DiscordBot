@@ -1,5 +1,9 @@
-﻿using System.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using PF2e_Kingmaker_Bot.KingmakerBusiness;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Xml.Linq;
+
 
 public enum EnumCharter
 {
@@ -77,9 +81,21 @@ public enum EnumKingdomSize
     Dominion
 }
 
-public class Kingdom
+public class Kingdom : DbContext
 {
-    private string KingdomName;    
+    [Key]
+    public int IDKingdom { get; set; }
+    public int? IDCharter { get; set; }
+    public int? IDHeartland { get; set; }
+    public int? IDGovernment { get; set; }
+    public virtual ICollection<Hex> Hexes { get; set; } = new List<Hex>();
+    public virtual Charter? IDCharterNavigation { get; set; }
+    public virtual Government? IDGovernmentNavigation { get; set; }
+    public virtual Heartland? IDHeartlandNavigation { get; set; }
+
+
+    public string KingdomName;
+    public string ServerChannelName;
 
     private EnumCharter Charter;
     private EnumHeartland Heartland;
@@ -87,7 +103,7 @@ public class Kingdom
 
     private int ExperiencePoints;
     public int KingdomLevel { get; private set; }
-    private int PlayersLevel;
+    public int PlayersLevel;
 
     public Dictionary<EnumAbilityScore, Ability> Abilities { get; }
 
@@ -100,7 +116,7 @@ public class Kingdom
 
     public Dictionary<EnumLeaderRole, Leader> Leaders { get; }
 
-    private List<Settlement> Settlements;
+    public List<Settlement> Settlements;
 
     private Dictionary<string, Hex> WorldMap = new Dictionary<string, Hex>();
     
@@ -108,6 +124,12 @@ public class Kingdom
     private Dictionary<EnumRuinCategory, int> RuinThreshold;
     public Dictionary<EnumRuinCategory, int> RuinItemPenalty { get; }
     public Dictionary<EnumSkills, EnumSkillTraining> SkillTrainings { get; }
+
+    public virtual ICollection<Leader> Leaders2 { get; set; } = new List<Leader>();
+
+    public virtual ICollection<Settlement> Settlements2 { get; set; } = new List<Settlement>();
+
+    public virtual ICollection<SkillTraining> SkillTrainings2 { get; set; } = new List<SkillTraining>();
 
     public List<EnumFeats> Feats { get; }
     public List<EnumXPMilestone> Milestones { get; }
@@ -117,6 +139,69 @@ public class Kingdom
 
     private bool InAnarchy = false;
     private bool TreasuryTapped = false;
+
+    public DbSet<Kingdom> DB_Kingdoms { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseSqlServer(getSQLServerConnectionString());
+    }
+
+    public string getSQLServerConnectionString()
+    {
+        string connectionString;
+
+        try
+        {
+            connectionString = File.ReadAllText("./Secrets/DatabaseConnection.txt");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error reading token file: {ex.Message}");
+            return "";
+        }
+
+        return connectionString;
+    }
+
+    public Kingdom GetKingdom(int id)
+    {                
+        return DB_Kingdoms.Find(id);        
+    }
+
+    public Kingdom GetKingdomByServerChannel(string serverChannelName)
+    {
+        return DB_Kingdoms.FirstOrDefault(k => k.ServerChannelName == serverChannelName);
+    }
+
+    public async Task SaveKingdom()
+    {
+
+        if (IDKingdom == 0)
+        {
+            DB_Kingdoms.Add(this);
+        }
+        else
+        {
+            DB_Kingdoms.Update(this);
+        }
+
+        await this.SaveChangesAsync();
+
+    }
+
+    public async Task DeleteKingdom(int id)
+    {
+        var kingdom = DB_Kingdoms.Find(id);
+        if (kingdom != null)
+        {
+            DB_Kingdoms.Remove(this);
+            SaveChanges();
+        }
+    }
+
+    public Kingdom()
+    { }
 
     public Kingdom(string name)
     {
@@ -1116,7 +1201,7 @@ public class Kingdom
 
     public EnumCheckResult UseActivity(EnumActivity usedActivityParam, List<Bonus>? paramBonusList = null, int DCModifier = 0, EnumLeaderRole role = EnumLeaderRole.None)
     {       
-        Activity usedActivity = Activity.ActivityList()[usedActivityParam];
+        Activity usedActivity = Activity.ActivityList[usedActivityParam];
         Skill usedSkill = Skill.SkillList()[usedActivity.RequiredSkill];
 
         if (InAnarchy)

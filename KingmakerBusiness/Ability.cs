@@ -35,7 +35,7 @@ public class Ability
 
     public int Modifier()
     {
-        return (Score - 10) / 2;
+        return (int)Math.Floor((double)((Score - 10) / 2));
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿
+using PF2e_Kingmaker_Bot.KingmakerBusiness;
 using System.Collections.Generic;
 
 public enum EnumSettlementType
@@ -30,6 +31,14 @@ public enum EnumSettlementSideFeature
 
 public class Settlement
 {
+    public int IDSettlement { get; set; }
+    public int IDKingdom { get; set; }
+    public int IDSettlementType { get; set; }
+    public int IDHex { get; set; }
+    public virtual Hex IDHexNavigation { get; set; } = null!;
+    public virtual Kingdom IDKingdomNavigation { get; set; } = null!;
+    public virtual SettlementType IDSettlementTypeNavigation { get; set; } = null!;
+
     public string Name { get; set; }
     public bool IsCapital { get; set; }
     public Hex SettlementHex { get; set; }
@@ -37,6 +46,8 @@ public class Settlement
 
     private Dictionary<int, UrbanGrid> UrbanGrids = new Dictionary<int, UrbanGrid>();
     private Dictionary<EnumSettlementSide, EnumSettlementSideFeature> Sides = new Dictionary<EnumSettlementSide, EnumSettlementSideFeature>(); //Might be a list of features for each side, still unclear.
+
+    public virtual ICollection<Structure> Structures { get; set; } = new List<Structure>();
 
     private Kingdom kingdom;
     
@@ -68,9 +79,17 @@ public class Settlement
         }
         else
         {
-            int alreadyOccupiedLots = UrbanGrids[gridNumber].Blocks[blockNumber].OccupiedLots();
-            if(ReadyForNextType() && alreadyOccupiedLots == 0)
+            int alreadyOccupiedLots = 0;
+            if(UrbanGrids.ContainsKey(gridNumber))
             {
+                alreadyOccupiedLots = UrbanGrids[gridNumber].Blocks[blockNumber].OccupiedLots();
+            }
+            if (ReadyForNextType() && alreadyOccupiedLots == 0)
+            {
+                if(SettlementType == EnumSettlementType.Metropolis)
+                {
+                    UrbanGrids[gridNumber] = new UrbanGrid();
+                }
                 SettlementType = NextType();
             }
 
@@ -84,6 +103,7 @@ public class Settlement
             {
                 throw new Exception("There are not enough lots left to build this Structure in this Block.");
             }
+            
             UrbanGrids[gridNumber].Blocks[blockNumber].Structures.Add(structure);
         }
     }

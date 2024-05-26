@@ -1,4 +1,6 @@
-﻿public enum EnumSkills
+﻿using PF2e_Kingmaker_Bot.KingmakerBusiness;
+
+public enum EnumSkills
 {
     None,
     Agriculture,
@@ -30,6 +32,7 @@ public enum EnumSkillTraining
 
 public class Skill
 {
+    public int IDSkill { get; set; }
     public EnumSkills SkillName { get; set; }
     public EnumAbilityScore KeyAbility { get; set; }
 
@@ -44,6 +47,7 @@ public class Skill
 
         return returnedMap;
     }
+    public virtual ICollection<SkillTraining> SkillTrainings { get; set; } = new List<SkillTraining>();
 
     public Skill(EnumSkills enumSkill)
     {

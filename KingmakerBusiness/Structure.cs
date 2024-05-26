@@ -1,4 +1,6 @@
-﻿public enum EnumStructureType
+﻿using PF2e_Kingmaker_Bot.KingmakerBusiness;
+
+public enum EnumStructureType
 {
     Building,
     Yard,    
@@ -83,6 +85,12 @@ public enum EnumStructure
 
 public class Structure
 {
+    public int IDStructure { get; set; }
+    public int IDStructureType { get; set; }
+    public int IDSettlement { get; set; }
+    public virtual Settlement IDSettlementNavigation { get; set; } = null!;
+    public virtual StructureType IDStructureTypeNavigation { get; set; } = null!;
+
     public EnumStructure Name { get; }
     public EnumStructureType StructureType { get; }
     private int RequiredLevel;

@@ -1,4 +1,6 @@
 ﻿
+using PF2e_Kingmaker_Bot.KingmakerBusiness;
+
 public enum EnumLeaderRole
 {
     None,
@@ -14,6 +16,11 @@ public enum EnumLeaderRole
 
 public class Leader
 {
+    public int IDLeader { get; set; }
+    public int IDKingdom { get; set; }
+    public int IDLeaderType { get; set; }
+    public virtual Kingdom IDKingdomNavigation { get; set; } = null!;
+    public virtual LeaderType IDLeaderTypeNavigation { get; set; } = null!;
     public string Name { get; set; }
     public EnumLeaderRole Role { get; set; }
     public bool IsInvested { get; set; }
@@ -26,7 +33,7 @@ public class Leader
         if (name == null || name == "") throw new Exception("Name must not be empty.");
 
         if (role == EnumLeaderRole.None && invested) throw new Exception("A leader without a Role can't be Invested.");
-
+        
         Name = name;
         Role = role;
         IsInvested = invested;

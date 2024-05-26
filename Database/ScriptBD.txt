@@ -1,0 +1,424 @@
+﻿USE [master]
+GO
+/****** Object:  Database [Kingmaker]    Script Date: 2023-09-12 22:14:45 ******/
+CREATE DATABASE [Kingmaker]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'Kingmaker', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\Kingmaker.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'Kingmaker_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\Kingmaker_log.ldf' , SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
+ WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
+GO
+ALTER DATABASE [Kingmaker] SET COMPATIBILITY_LEVEL = 160
+GO
+IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
+begin
+EXEC [Kingmaker].[dbo].[sp_fulltext_database] @action = 'enable'
+end
+GO
+ALTER DATABASE [Kingmaker] SET ANSI_NULL_DEFAULT OFF 
+GO
+ALTER DATABASE [Kingmaker] SET ANSI_NULLS OFF 
+GO
+ALTER DATABASE [Kingmaker] SET ANSI_PADDING OFF 
+GO
+ALTER DATABASE [Kingmaker] SET ANSI_WARNINGS OFF 
+GO
+ALTER DATABASE [Kingmaker] SET ARITHABORT OFF 
+GO
+ALTER DATABASE [Kingmaker] SET AUTO_CLOSE OFF 
+GO
+ALTER DATABASE [Kingmaker] SET AUTO_SHRINK OFF 
+GO
+ALTER DATABASE [Kingmaker] SET AUTO_UPDATE_STATISTICS ON 
+GO
+ALTER DATABASE [Kingmaker] SET CURSOR_CLOSE_ON_COMMIT OFF 
+GO
+ALTER DATABASE [Kingmaker] SET CURSOR_DEFAULT  GLOBAL 
+GO
+ALTER DATABASE [Kingmaker] SET CONCAT_NULL_YIELDS_NULL OFF 
+GO
+ALTER DATABASE [Kingmaker] SET NUMERIC_ROUNDABORT OFF 
+GO
+ALTER DATABASE [Kingmaker] SET QUOTED_IDENTIFIER OFF 
+GO
+ALTER DATABASE [Kingmaker] SET RECURSIVE_TRIGGERS OFF 
+GO
+ALTER DATABASE [Kingmaker] SET  DISABLE_BROKER 
+GO
+ALTER DATABASE [Kingmaker] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
+GO
+ALTER DATABASE [Kingmaker] SET DATE_CORRELATION_OPTIMIZATION OFF 
+GO
+ALTER DATABASE [Kingmaker] SET TRUSTWORTHY OFF 
+GO
+ALTER DATABASE [Kingmaker] SET ALLOW_SNAPSHOT_ISOLATION OFF 
+GO
+ALTER DATABASE [Kingmaker] SET PARAMETERIZATION SIMPLE 
+GO
+ALTER DATABASE [Kingmaker] SET READ_COMMITTED_SNAPSHOT OFF 
+GO
+ALTER DATABASE [Kingmaker] SET HONOR_BROKER_PRIORITY OFF 
+GO
+ALTER DATABASE [Kingmaker] SET RECOVERY SIMPLE 
+GO
+ALTER DATABASE [Kingmaker] SET  MULTI_USER 
+GO
+ALTER DATABASE [Kingmaker] SET PAGE_VERIFY CHECKSUM  
+GO
+ALTER DATABASE [Kingmaker] SET DB_CHAINING OFF 
+GO
+ALTER DATABASE [Kingmaker] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
+GO
+ALTER DATABASE [Kingmaker] SET TARGET_RECOVERY_TIME = 60 SECONDS 
+GO
+ALTER DATABASE [Kingmaker] SET DELAYED_DURABILITY = DISABLED 
+GO
+ALTER DATABASE [Kingmaker] SET ACCELERATED_DATABASE_RECOVERY = OFF  
+GO
+ALTER DATABASE [Kingmaker] SET QUERY_STORE = ON
+GO
+ALTER DATABASE [Kingmaker] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30), DATA_FLUSH_INTERVAL_SECONDS = 900, INTERVAL_LENGTH_MINUTES = 60, MAX_STORAGE_SIZE_MB = 1000, QUERY_CAPTURE_MODE = AUTO, SIZE_BASED_CLEANUP_MODE = AUTO, MAX_PLANS_PER_QUERY = 200, WAIT_STATS_CAPTURE_MODE = ON)
+GO
+USE [Kingmaker]
+GO
+/****** Object:  Table [dbo].[Charter]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Charter](
+	[IDCharter] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_Charter] PRIMARY KEY CLUSTERED 
+(
+	[IDCharter] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Government]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Government](
+	[IDGovernment] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_Government] PRIMARY KEY CLUSTERED 
+(
+	[IDGovernment] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Heartland]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Heartland](
+	[IDHeartland] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_Heartland] PRIMARY KEY CLUSTERED 
+(
+	[IDHeartland] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Hex]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Hex](
+	[IDHex] [int] NOT NULL,
+	[IDKingdom] [int] NULL,
+	[X] [int] NULL,
+	[Y] [int] NULL,
+	[IDHeartland] [int] NULL,
+	[IDTerrainFeature] [int] NULL,
+	[IDRessourceType] [int] NULL,
+	[IsTerritory] [bit] NULL,
+ CONSTRAINT [PK_Hex] PRIMARY KEY CLUSTERED 
+(
+	[IDHex] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Kingdom]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Kingdom](
+	[IDKingdom] [int] NOT NULL,
+	[Name] [nvarchar](500) NULL,
+	[IDCharter] [int] NULL,
+	[IDHeartland] [int] NULL,
+	[IDGovernment] [int] NULL,
+	[CultureModifier] [int] NULL,
+	[EconomyModifier] [int] NULL,
+	[LoyaltyModifier] [int] NULL,
+	[StabilityModifier] [int] NULL,
+	[ExperiencePoints] [int] NULL,
+	[KingdomLevel] [int] NULL,
+	[PlayersLevel] [int] NULL,
+	[FamePoints] [int] NULL,
+	[IDFameType] [int] NULL,
+	[UnrestPoints] [int] NULL,
+	[Food] [int] NULL,
+	[Lumber] [int] NULL,
+	[Stone] [int] NULL,
+	[Luxuries] [int] NULL,
+	[CorruptionScore] [int] NULL,
+	[CorruptionModifier] [int] NULL,
+	[CrimeScore] [int] NULL,
+	[CrimeModifier] [int] NULL,
+	[StrifeScore] [int] NULL,
+	[StrifeModifier] [int] NULL,
+	[DecayScore] [int] NULL,
+	[DecayModifier] [int] NULL,
+	[TurnNumber] [int] NULL,
+	[IsAnarchy] [bit] NULL,
+	[IsTreasuryTapped] [bit] NULL,
+ CONSTRAINT [PK_Kingdom] PRIMARY KEY CLUSTERED 
+(
+	[IDKingdom] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Leader]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Leader](
+	[IDLeader] [int] NOT NULL,
+	[IDKingdom] [int] NOT NULL,
+	[IDLeaderType] [int] NULL,
+	[Name] [nvarchar](500) NULL,
+	[IsInvested] [bit] NULL,
+	[IsPlayer] [bit] NULL,
+	[IsVacant] [bit] NULL,
+	[IsIngratiated] [bit] NULL,
+ CONSTRAINT [PK_Leader] PRIMARY KEY CLUSTERED 
+(
+	[IDLeader] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[LeaderType]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[LeaderType](
+	[IDLeaderType] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_LeaderType] PRIMARY KEY CLUSTERED 
+(
+	[IDLeaderType] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[RessourceType]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[RessourceType](
+	[IDRessourceType] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_RessourceType] PRIMARY KEY CLUSTERED 
+(
+	[IDRessourceType] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Settlement]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Settlement](
+	[IDSettlement] [int] NOT NULL,
+	[IDKingdom] [int] NOT NULL,
+	[IDSettlementType] [int] NULL,
+	[IsCapital] [bit] NOT NULL,
+	[IDHex] [int] NULL,
+ CONSTRAINT [PK_Settlement] PRIMARY KEY CLUSTERED 
+(
+	[IDSettlement] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[SettlementType]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[SettlementType](
+	[IDSettlementType] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_SettlementType] PRIMARY KEY CLUSTERED 
+(
+	[IDSettlementType] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Skill]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Skill](
+	[IDSkill] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_Skill1] PRIMARY KEY CLUSTERED 
+(
+	[IDSkill] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[SkillTraining]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[SkillTraining](
+	[IDSkillTraining] [int] NOT NULL,
+	[IDKingdom] [int] NULL,
+	[IDSkillTrainingType] [int] NULL,
+ CONSTRAINT [PK_Skill] PRIMARY KEY CLUSTERED 
+(
+	[IDSkillTraining] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[SkillTrainingType]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[SkillTrainingType](
+	[IDSkillTrainingType] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_SkillTraining] PRIMARY KEY CLUSTERED 
+(
+	[IDSkillTrainingType] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Structure]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Structure](
+	[IDStructure] [int] NOT NULL,
+	[IDStructureType] [int] NULL,
+	[IDSettlement] [int] NULL,
+ CONSTRAINT [PK_Structure] PRIMARY KEY CLUSTERED 
+(
+	[IDStructure] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[StructureType]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[StructureType](
+	[IDStructureType] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_StructureType] PRIMARY KEY CLUSTERED 
+(
+	[IDStructureType] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[TerrainFeature]    Script Date: 2023-09-12 22:14:45 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[TerrainFeature](
+	[IDTerrainFeature] [int] NOT NULL,
+	[Name] [nvarchar](50) NULL,
+ CONSTRAINT [PK_TerrainFeature] PRIMARY KEY CLUSTERED 
+(
+	[IDTerrainFeature] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Settlement] ADD  CONSTRAINT [DF_Settlement_IsCapital]  DEFAULT ((0)) FOR [IsCapital]
+GO
+ALTER TABLE [dbo].[Hex]  WITH CHECK ADD  CONSTRAINT [FK_Hex_Heartland] FOREIGN KEY([IDHeartland])
+REFERENCES [dbo].[Heartland] ([IDHeartland])
+GO
+ALTER TABLE [dbo].[Hex] CHECK CONSTRAINT [FK_Hex_Heartland]
+GO
+ALTER TABLE [dbo].[Hex]  WITH CHECK ADD  CONSTRAINT [FK_Hex_Kingdom] FOREIGN KEY([IDKingdom])
+REFERENCES [dbo].[Kingdom] ([IDKingdom])
+GO
+ALTER TABLE [dbo].[Hex] CHECK CONSTRAINT [FK_Hex_Kingdom]
+GO
+ALTER TABLE [dbo].[Hex]  WITH CHECK ADD  CONSTRAINT [FK_Hex_RessourceType] FOREIGN KEY([IDRessourceType])
+REFERENCES [dbo].[RessourceType] ([IDRessourceType])
+GO
+ALTER TABLE [dbo].[Hex] CHECK CONSTRAINT [FK_Hex_RessourceType]
+GO
+ALTER TABLE [dbo].[Hex]  WITH CHECK ADD  CONSTRAINT [FK_Hex_TerrainFeature] FOREIGN KEY([IDTerrainFeature])
+REFERENCES [dbo].[TerrainFeature] ([IDTerrainFeature])
+GO
+ALTER TABLE [dbo].[Hex] CHECK CONSTRAINT [FK_Hex_TerrainFeature]
+GO
+ALTER TABLE [dbo].[Leader]  WITH CHECK ADD  CONSTRAINT [FK_Leader_Kingdom] FOREIGN KEY([IDKingdom])
+REFERENCES [dbo].[Kingdom] ([IDKingdom])
+GO
+ALTER TABLE [dbo].[Leader] CHECK CONSTRAINT [FK_Leader_Kingdom]
+GO
+ALTER TABLE [dbo].[Leader]  WITH CHECK ADD  CONSTRAINT [FK_Leader_LeaderType] FOREIGN KEY([IDLeaderType])
+REFERENCES [dbo].[LeaderType] ([IDLeaderType])
+GO
+ALTER TABLE [dbo].[Leader] CHECK CONSTRAINT [FK_Leader_LeaderType]
+GO
+ALTER TABLE [dbo].[Settlement]  WITH CHECK ADD  CONSTRAINT [FK_Settlement_Hex] FOREIGN KEY([IDHex])
+REFERENCES [dbo].[Hex] ([IDHex])
+GO
+ALTER TABLE [dbo].[Settlement] CHECK CONSTRAINT [FK_Settlement_Hex]
+GO
+ALTER TABLE [dbo].[Settlement]  WITH CHECK ADD  CONSTRAINT [FK_Settlement_Kingdom] FOREIGN KEY([IDKingdom])
+REFERENCES [dbo].[Kingdom] ([IDKingdom])
+GO
+ALTER TABLE [dbo].[Settlement] CHECK CONSTRAINT [FK_Settlement_Kingdom]
+GO
+ALTER TABLE [dbo].[Settlement]  WITH CHECK ADD  CONSTRAINT [FK_Settlement_SettlementType] FOREIGN KEY([IDSettlementType])
+REFERENCES [dbo].[SettlementType] ([IDSettlementType])
+GO
+ALTER TABLE [dbo].[Settlement] CHECK CONSTRAINT [FK_Settlement_SettlementType]
+GO
+ALTER TABLE [dbo].[SkillTraining]  WITH CHECK ADD  CONSTRAINT [FK_Skill_Kingdom] FOREIGN KEY([IDKingdom])
+REFERENCES [dbo].[Kingdom] ([IDKingdom])
+GO
+ALTER TABLE [dbo].[SkillTraining] CHECK CONSTRAINT [FK_Skill_Kingdom]
+GO
+ALTER TABLE [dbo].[SkillTraining]  WITH CHECK ADD  CONSTRAINT [FK_SkillTraining_SkillTrainingType] FOREIGN KEY([IDSkillTrainingType])
+REFERENCES [dbo].[SkillTrainingType] ([IDSkillTrainingType])
+GO
+ALTER TABLE [dbo].[SkillTraining] CHECK CONSTRAINT [FK_SkillTraining_SkillTrainingType]
+GO
+ALTER TABLE [dbo].[Structure]  WITH CHECK ADD  CONSTRAINT [FK_Structure_Settlement] FOREIGN KEY([IDSettlement])
+REFERENCES [dbo].[Settlement] ([IDSettlement])
+GO
+ALTER TABLE [dbo].[Structure] CHECK CONSTRAINT [FK_Structure_Settlement]
+GO
+ALTER TABLE [dbo].[Structure]  WITH CHECK ADD  CONSTRAINT [FK_Structure_StructureType] FOREIGN KEY([IDStructureType])
+REFERENCES [dbo].[StructureType] ([IDStructureType])
+GO
+ALTER TABLE [dbo].[Structure] CHECK CONSTRAINT [FK_Structure_StructureType]
+GO
+USE [master]
+GO
+ALTER DATABASE [Kingmaker] SET  READ_WRITE 
+GO

@@ -363,14 +363,13 @@ MigrationBackup/
 FodyWeavers.xsd
 
 ###
-#	My own ignores
+#	My own ignores, for Secrets
 ###
 #My Discord Bot Token
-DiscordBotKey.txt
+/Secrets/DiscordBotKey.txt
 
 #My Database connection strings
-DatabaseConnection.txt
+/Secrets/DatabaseConnection.txt
 
 #My Server ID file used for test purposes to push commands to a server directly instead of waiting for the Discord global one hour refresh
-PushCommandToServer.txt
 /Secrets/PushCommandToServer.txt
