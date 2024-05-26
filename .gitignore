@@ -361,3 +361,16 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+###
+#	My own ignores
+###
+#My Discord Bot Token
+DiscordBotKey.txt
+
+#My Database connection strings
+DatabaseConnection.txt
+
+#My Server ID file used for test purposes to push commands to a server directly instead of waiting for the Discord global one hour refresh
+PushCommandToServer.txt
+/Secrets/PushCommandToServer.txt
